@@ -62,7 +62,6 @@ def chat_history(update: Update, context: CallbackContext):
     """Echo the user history."""
     """message is the answer for a user"""
     message=''
-    #получается лог на конкретного пользовтеля создается в момент запроса  истории
     """File with the name of user"""
     with open(f"log_{update.effective_user.first_name}.txt","a", encoding="utf-8") as fopen:
         counter=0
