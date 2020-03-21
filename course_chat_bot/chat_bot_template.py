@@ -4,6 +4,8 @@
 import logging
 import datetime
 import requests
+import csv
+from operator import itemgetter
 
 from setup import PROXY, TOKEN
 from telegram import Bot, Update
@@ -17,6 +19,35 @@ logger = logging.getLogger(__name__)
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
+def yesterday_date():
+    #здесь сегодняшяя дата должна превращаться во вчерашнюю
+    pass
+
+def get_confirmed(item):
+    return int(itemgetter('Confirmed')(item))-int(itemgetter('Recovered')(item))-int(itemgetter('Deaths')(item))
+
+def get_corona_dictlist_yesterday():
+    data=datetime.date.today()
+    mainurl_corona='https://raw.github.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/'
+   # req=requests.get(f'{mainurl_corona}{}')
+    if data.day>10:
+        if data.month>=10:
+            req=requests.get(f'{mainurl_corona}{str(data.month)}-{str(data.day-1)}-2020.csv')
+        else:
+            req = requests.get(f'{mainurl_corona}0{str(data.month)}-{str(data.day-1)}-2020.csv')
+    else:
+        if data.month>10:
+            req = requests.get(f'{mainurl_corona}{str(data.month)}-0{str(data.day-1)}-2020.csv')
+        else:
+            req = requests.get(f'{mainurl_corona}0{str(data.month)}-0{str(data.day-1)}-2020.csv')
+    logger.info(req.status_code)
+    with open('now.csv','wb+') as now:
+        now.write(req.content)
+    with open('now.csv','r') as now:
+        now_dict=csv.DictReader(now)
+        sort_dictlist=list(now_dict)
+        sort_dictlist=sorted(sort_dictlist,key=get_confirmed,reverse=True)
+    return sort_dictlist
 
 
 log=[]
@@ -42,6 +73,17 @@ def log_f(func):
                 print(log[i], file=log_open)
     return inner
 
+
+@log_f
+def corono_stats(update: Update, context: CallbackContext):
+    corono_dictlist = get_corona_dictlist_yesterday()
+    msg='Топ 5 местностей по заражению на сегодня:\n'
+    for i in range(0,5):
+
+        if len((corono_dictlist[i]['Province/State']))>0:
+            msg+=(corono_dictlist[i]['Province/State']+':')
+        msg+=corono_dictlist[i]['Country/Region']+'\n'
+    update.message.reply_text(msg)
 @log_f
 def start(update: Update, context: CallbackContext):
     """Send a message when the command /start is issued."""
@@ -108,7 +150,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('help', chat_help))
     updater.dispatcher.add_handler(CommandHandler('history', chat_history))
     updater.dispatcher.add_handler(CommandHandler('fact', fact))
-
+    updater.dispatcher.add_handler(CommandHandler('corono_stats',corono_stats))
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
