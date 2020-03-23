@@ -78,6 +78,35 @@ def corono_stats(update: Update, context: CallbackContext):
     update.message.reply_text(msg)
 
 @log_f
+def weather(update: Update, context: CallbackContext):
+    message=''
+    r = requests.get(
+        'https://yandex.ru/pogoda/47?utm_source=serp&utm_campaign=wizard&utm_medium=desktop&utm_content=wizard_desktop_main&utm_term=title')
+    d = r.text
+
+    position = d.rfind(
+        '<div class="temp fact__temp fact__temp_size_s" role="text"><span class="temp__pre-a11y a11y-hidden">Текущая температура</span><span class="temp__value">') + len(
+        '<div class="temp fact__temp fact__temp_size_s" role="text"><span class="temp__pre-a11y a11y-hidden">Текущая температура</span><span class="temp__value">')
+    temperature = ''
+    i = 0
+    while d[position + i] != "<":
+        temperature += d[position + i]
+        i += 1
+    position = d.find('<div class="link__condition day-anchor i-bem" data-bem=') + len(
+        '<div class="link__condition day-anchor i-bem" data-bem=')
+    fl = False
+    condition = ''
+    i = 0
+    while d[position + i] != "<":
+        if fl:
+            condition += d[position + i]
+        if d[position + i] == ">":
+            fl = True
+        i += 1
+    message +='Температура: ' + temperature + "\n" + condition
+    update.message.reply_text(message)
+
+@log_f
 def start(update: Update, context: CallbackContext):
     """Send a message when the command /start is issued."""
     update.message.reply_text(f'Привет, {update.effective_user.first_name}!')
@@ -143,6 +172,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('history', chat_history))
     updater.dispatcher.add_handler(CommandHandler('fact', fact))
     updater.dispatcher.add_handler(CommandHandler('corono_stats',corono_stats))
+    updater.dispatcher.add_handler(CommandHandler('weather', weather))
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
