@@ -72,9 +72,9 @@ def corono_stats(update: Update, context: CallbackContext):
     corono_dictlist = get_corona_dictlist_yesterday()
     msg='Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
     for i in range(0,5):
-        if len((corono_dictlist[i]['Province/State']))>0:
-            msg+=(corono_dictlist[i]['Province/State']+':')
-        msg+=corono_dictlist[i]['Country/Region']+'\n'
+        if len((corono_dictlist[i]['Province_State']))>0:
+            msg+=(corono_dictlist[i]['Province_State']+':')
+        msg+=corono_dictlist[i]['Country_Region']+'\n'
     update.message.reply_text(msg)
 
 @log_f
