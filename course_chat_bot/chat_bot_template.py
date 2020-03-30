@@ -1,3 +1,98 @@
+
+#!/usr/local/bin/python3
+# -*- coding: utf-8 -*-
+
+import logging
+from calculation_class import  calculatons
+from log_class import logger as func_logger
+from operator import itemgetter
+
+from setup import PROXY, TOKEN
+from telegram import Bot, Update
+from telegram.ext import CallbackContext, CommandHandler, Filters, MessageHandler, Updater
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+log=func_logger()
+# Define a few command handlers. These usually take the two arguments update and
+# context. Error handlers also receive the raised TelegramError object in error.
+
+
+@log.log_func
+def corono_stats(update: Update, context: CallbackContext):
+    update.message.reply_text(calculatons.get_corona_dictlist_yesterday())
+
+
+@log.log_func
+def weather(update: Update, context: CallbackContext):
+    update.message.reply_text(calculatons.get_weather())
+
+@log.log_func
+def start(update: Update, context: CallbackContext):
+    """Send a message when the command /start is issued."""
+    update.message.reply_text(f'Привет, {update.effective_user.first_name}!')
+
+
+@log.log_func
+def chat_help(update: Update, context: CallbackContext):
+    """Send a message when the command /help is issued."""
+    update.message.reply_text('Введи команду /start для начала. ')
+
+@log.log_func
+def echo(update: Update, context: CallbackContext):
+    """Echo the user message."""
+    update.message.reply_text(update.message.text)
+
+@log.log_func
+def chat_history(update: Update, context: CallbackContext):
+    update.message.reply_text(log.last_5_history(update))
+
+@log.log_func
+def fact(update: Update, context: CallbackContext):
+    update.message.reply_text(calculatons.get_cat_fact())
+
+
+@log.log_func
+def error(update: Update, context: CallbackContext):
+    """Log Errors caused by Updates."""
+    logger.warning(f'Update {update} caused error {context.error}')
+
+
+def main():
+    bot = Bot(
+        token=TOKEN,
+        base_url=PROXY,  # delete it if connection via VPN
+    )
+    updater = Updater(bot=bot, use_context=True)
+    # on different commands - answer in Telegram
+    updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('help', chat_help))
+    updater.dispatcher.add_handler(CommandHandler('history', chat_history))
+    updater.dispatcher.add_handler(CommandHandler('fact', fact))
+    updater.dispatcher.add_handler(CommandHandler('corono_stats',corono_stats))
+    updater.dispatcher.add_handler(CommandHandler('weather', weather))
+    # on noncommand i.e message - echo the message on Telegram
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
+
+    # log all errors
+    updater.dispatcher.add_error_handler(error)
+    # Start the Bot
+    updater.start_polling()
+    calculatons.get_corona_dictlist_yesterday()
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
+    updater.idle()
+
+
+if __name__ == '__main__':
+    logger.info('Start Bot')
+    main()
+
 #!/usr/local/bin/python3
 # -*- coding: utf-8 -*-
 
@@ -19,6 +114,36 @@ logger = logging.getLogger(__name__)
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
+def yesterday_date():
+    #здесь сегодняшяя дата должна превращаться во вчерашнюю
+    pass
+
+def get_confirmed(item):
+    return int(itemgetter('Confirmed')(item))-int(itemgetter('Recovered')(item))-int(itemgetter('Deaths')(item))
+
+def get_corona_dictlist_yesterday():
+    data=datetime.date.today()
+    mainurl_corona='https://raw.github.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/'
+   # req=requests.get(f'{mainurl_corona}{}')
+    if data.day>10:
+        if data.month>=10:
+            req=requests.get(f'{mainurl_corona}{str(data.month)}-{str(data.day-1)}-2020.csv')
+        else:
+            req = requests.get(f'{mainurl_corona}0{str(data.month)}-{str(data.day-1)}-2020.csv')
+    else:
+        if data.month>10:
+            req = requests.get(f'{mainurl_corona}{str(data.month)}-0{str(data.day-1)}-2020.csv')
+        else:
+            req = requests.get(f'{mainurl_corona}0{str(data.month)}-0{str(data.day-1)}-2020.csv')
+    logger.info(req.status_code)
+    with open('now.csv','wb+') as now:
+        now.write(req.content)
+    with open('now.csv','r') as now:
+        now_dict=csv.DictReader(now)
+        sort_dictlist=list(now_dict)
+        sort_dictlist=sorted(sort_dictlist,key=get_confirmed,reverse=True)
+    return sort_dictlist
+
 
 log=[]
 def log_f(func):
@@ -44,68 +169,16 @@ def log_f(func):
     return inner
 
 
-def get_corona_dictlist_yesterday():
-    data=datetime.date.today()-datetime.timedelta(days=1)
-    mainurl_corona='https://raw.github.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/'
-    if data.day>10:
-        if data.month>=10:
-            req=requests.get(f'{mainurl_corona}{str(data.month)}-{str(data.day)}-2020.csv')
-        else:
-            req = requests.get(f'{mainurl_corona}0{str(data.month)}-{str(data.day)}-2020.csv')
-    else:
-        if data.month>10:
-            req = requests.get(f'{mainurl_corona}{str(data.month)}-0{str(data.day)}-2020.csv')
-        else:
-            req = requests.get(f'{mainurl_corona}0{str(data.month)}-0{str(data.day)}-2020.csv')
-    logger.info(req.status_code)
-    with open('now.csv','wb+') as now:
-        now.write(req.content)
-    with open('now.csv','r') as now:
-        now_dict=csv.DictReader(now)
-        sort_dictlist=list(now_dict)
-        sort_dictlist=sorted(sort_dictlist,key=lambda record: int(record['Confirmed']),reverse=True)
-    return sort_dictlist
-
-
 @log_f
 def corono_stats(update: Update, context: CallbackContext):
     corono_dictlist = get_corona_dictlist_yesterday()
-    msg='Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
+    msg='Топ 5 местностей по заражению на сегодня:\n'
     for i in range(0,5):
-        if len((corono_dictlist[i]['Province_State']))>0:
-            msg+=(corono_dictlist[i]['Province_State']+':')
-        msg+=corono_dictlist[i]['Country_Region']+'\n'
+
+        if len((corono_dictlist[i]['Province/State']))>0:
+            msg+=(corono_dictlist[i]['Province/State']+':')
+        msg+=corono_dictlist[i]['Country/Region']+'\n'
     update.message.reply_text(msg)
-
-@log_f
-def weather(update: Update, context: CallbackContext):
-    message=''
-    r = requests.get(
-        'https://yandex.ru/pogoda/47?utm_source=serp&utm_campaign=wizard&utm_medium=desktop&utm_content=wizard_desktop_main&utm_term=title')
-    d = r.text
-
-    position = d.rfind(
-        '<div class="temp fact__temp fact__temp_size_s" role="text"><span class="temp__pre-a11y a11y-hidden">Текущая температура</span><span class="temp__value">') + len(
-        '<div class="temp fact__temp fact__temp_size_s" role="text"><span class="temp__pre-a11y a11y-hidden">Текущая температура</span><span class="temp__value">')
-    temperature = ''
-    i = 0
-    while d[position + i] != "<":
-        temperature += d[position + i]
-        i += 1
-    position = d.find('<div class="link__condition day-anchor i-bem" data-bem=') + len(
-        '<div class="link__condition day-anchor i-bem" data-bem=')
-    fl = False
-    condition = ''
-    i = 0
-    while d[position + i] != "<":
-        if fl:
-            condition += d[position + i]
-        if d[position + i] == ">":
-            fl = True
-        i += 1
-    message +='Температура: ' + temperature + "\n" + condition
-    update.message.reply_text(message)
-
 @log_f
 def start(update: Update, context: CallbackContext):
     """Send a message when the command /start is issued."""
@@ -166,18 +239,19 @@ def main():
         base_url=PROXY,  # delete it if connection via VPN
     )
     updater = Updater(bot=bot, use_context=True)
+
     # on different commands - answer in Telegram
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('help', chat_help))
     updater.dispatcher.add_handler(CommandHandler('history', chat_history))
     updater.dispatcher.add_handler(CommandHandler('fact', fact))
     updater.dispatcher.add_handler(CommandHandler('corono_stats',corono_stats))
-    updater.dispatcher.add_handler(CommandHandler('weather', weather))
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
     # log all errors
     updater.dispatcher.add_error_handler(error)
+
     # Start the Bot
     updater.start_polling()
 
@@ -190,3 +264,4 @@ def main():
 if __name__ == '__main__':
     logger.info('Start Bot')
     main()
+
