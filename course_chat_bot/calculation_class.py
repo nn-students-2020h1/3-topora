@@ -36,6 +36,77 @@ class calculatons:
             msg += sort_dictlist[i]['Country_Region'] + '\n'
         return msg
 
+    @staticmethod
+    def corona_stats_dynamics():
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            level=logging.INFO)
+        logger = logging.getLogger(__name__)
+        data = datetime.date.today() - datetime.timedelta(days=1)
+        mainurl_corona = 'https://raw.github.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/'
+
+        #################################################################################################
+        #prev_day
+        day=data.day-1
+        month=data.month-1
+        if day>0:
+            if day > 10:
+                if data.month >= 10:
+                    req1 = requests.get(f'{mainurl_corona}{str(data.month)}-{str(day)}-2020.csv')
+                else:
+                    req1 = requests.get(f'{mainurl_corona}0{str(data.month)}-{str(day)}-2020.csv')
+            else:
+                if data.month > 10:
+                    req1 = requests.get(f'{mainurl_corona}{str(data.month)}-0{str(day)}-2020.csv')
+                else:
+                    req1 = requests.get(f'{mainurl_corona}0{str(data.month)}-0{str(day)}-2020.csv')
+        else:
+            day=30
+            if day > 10:
+                if month >= 10:
+                    req1 = requests.get(f'{mainurl_corona}{str(month)}-{str(day)}-2020.csv')
+                else:
+                    req1 = requests.get(f'{mainurl_corona}0{str(month)}-{str(day)}-2020.csv')
+            else:
+                if month > 10:
+                    req1 = requests.get(f'{mainurl_corona}{str(month)}-0{str(day)}-2020.csv')
+                else:
+                    req1 = requests.get(f'{mainurl_corona}0{str(month)}-0{str(day)}-2020.csv')
+        logger.info(req1.status_code)
+        #################################################################################################
+        #today
+        if data.day > 10:
+            if data.month >= 10:
+                req = requests.get(f'{mainurl_corona}{str(data.month)}-{str(data.day)}-2020.csv')
+            else:
+                req = requests.get(f'{mainurl_corona}0{str(data.month)}-{str(data.day)}-2020.csv')
+        else:
+            if data.month > 10:
+                req = requests.get(f'{mainurl_corona}{str(data.month)}-0{str(data.day)}-2020.csv')
+            else:
+                req = requests.get(f'{mainurl_corona}0{str(data.month)}-0{str(data.day)}-2020.csv')
+        logger.info(req.status_code)
+        ##################################################################################################
+        today=0
+        yesterday=0
+        with open('now.csv', 'wb+') as now:
+            now.write(req.content)
+        with open('yest.csv', 'wb+') as yest:
+            yest.write(req1.content)
+        with open('now.csv', 'r') as now:
+            now_dict = csv.DictReader(now)
+            amount=[]
+            for row in now_dict:
+                amount.append(int(row['Confirmed']))
+            today=sum(amount)
+        with open('yest.csv', 'r') as yest:
+            yest_dict = csv.DictReader(yest)
+            amount=[]
+            for row in yest_dict:
+                amount.append(int(row['Confirmed']))
+            yesterday=sum(amount)
+        msg="Со вчерашнего дня заразилось " + str(today-yesterday) + " человек"
+        return msg
+
 
     @staticmethod
     def get_weather(): #returns str
