@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 log=func_logger()
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
-
+@log.log_func
+def corona_stats_dynamics(update: Update, context: CallbackContext):
+    update.message.reply_text(calculatons.corona_stats_dynamics())
 
 @log.log_func
 def corono_stats(update: Update, context: CallbackContext):
@@ -75,6 +77,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('fact', fact))
     updater.dispatcher.add_handler(CommandHandler('corono_stats',corono_stats))
     updater.dispatcher.add_handler(CommandHandler('weather', weather))
+    updater.dispatcher.add_handler(CommandHandler('dynamics', corona_stats_dynamics))
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
