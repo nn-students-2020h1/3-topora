@@ -1,3 +1,4 @@
+
 from Board import Board
 from Renderer import Renderer
 import random
@@ -26,4 +27,3 @@ class BossPuzzle:
                 return False
         except BaseException:
             return False
-        return  True
