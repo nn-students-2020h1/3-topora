@@ -1,7 +1,9 @@
+
 from Board import Board
 from Renderer import Renderer
+import random
 class BossPuzzle:
-    #в итоге возвращает string что идет сразу в сообщение
+
     Board_size=4
     def __init__(self):
         self.board=Board(BossPuzzle.Board_size)
@@ -11,7 +13,8 @@ class BossPuzzle:
         return self.renderer.render(self.board)
 
     def start_new_game(self):
-        self.board.start_pose()
+        pos_number=random.randrange(1,len(self.board.Start_poses)-1)
+        self.board.start_pose(pos_number)
 
     def action(self,command:str):
         coordinates={}
@@ -24,4 +27,3 @@ class BossPuzzle:
                 return False
         except BaseException:
             return False
-        return  True

@@ -1,3 +1,4 @@
+
 from Board import Board
 
 class Renderer:
@@ -9,7 +10,7 @@ class Renderer:
         for i in range(board.size*board.size):
             coord_list.append([((i)%board.size)+1,((i)//board.size)+1])
         for cell  in coord_list:
-            if cell[0]==board.freecoord[0] and cell[1]==board.freecoord[1]:
+            if cell[0]==board.freecell[0] and cell[1]==board.freecell[1]:
                 render_queue.append(0)
             for numb in board.numbs:
                 if numb.x==cell[0] and numb.y==cell[1]:
@@ -38,3 +39,4 @@ class Renderer:
             board_draw+=self.symbol_translate(render_queue[i-1])
 
         return board_draw
+
