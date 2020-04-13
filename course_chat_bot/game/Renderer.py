@@ -1,3 +1,4 @@
+
 from Board import Board
 
 class Renderer:
@@ -38,3 +39,4 @@ class Renderer:
             board_draw+=self.symbol_translate(render_queue[i-1])
 
         return board_draw
+
