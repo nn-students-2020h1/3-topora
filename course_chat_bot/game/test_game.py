@@ -25,11 +25,11 @@ class Test_Board(unittest.TestCase):
     def test_is_move_possible_4(self):
         coord_dict = {'first_x': self.board.freecell[0], 'first_y': self.board.freecell[1],
                       'second_x': self.board.freecell[0]-1, 'second_y': self.board.freecell[1]}
-        self.assertEqual(self.board.is_move_possible(coord_dict), False)
+        self.assertFalse(self.board.is_move_possible(coord_dict))
     def test_is_move_possible_5(self):
         coord_dict = {'first_x': self.board.freecell[0]-1, 'first_y': self.board.freecell[1],
                       'second_x': self.board.freecell[0], 'second_y': self.board.freecell[1]}
-        self.assertEqual(self.board.is_move_possible(coord_dict), True)
+        self.assertTrue(self.board.is_move_possible(coord_dict))
 
     def test_start_pose(self):
         self.board.start_pose(1)

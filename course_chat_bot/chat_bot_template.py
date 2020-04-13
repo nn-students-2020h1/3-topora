@@ -20,6 +20,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 log=func_logger()
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 @log.log_func
@@ -27,16 +28,21 @@ def corona_stats_dynamics(update: Update, context: CallbackContext):
     update.message.reply_text(calculatons.corona_stats_dynamics())
 
 
+
+
 @log.log_func
 def game(update: Update, context: CallbackContext):
-    puzzle=BossPuzzle()
-    global puzzle
     game_status=True
-    global game_status
     puzzle.start_new_game()
     update.message.reply_text(puzzle.get_board()+'\n'
                               +'Game has started'+'\n'
                               +'Type:"game: *coordinates* *coordinates*" to play')
+
+def gamesetup():
+    global puzzle
+    puzzle=BossPuzzle()
+    global game_status
+    game_status=False
 
 @log.log_func
 def corono_stats(update: Update, context: CallbackContext):
@@ -61,7 +67,7 @@ def chat_help(update: Update, context: CallbackContext):
 @log.log_func
 def echo(update: Update, context: CallbackContext):
     """Echo the user message."""
-    if update.message.text[:6]=='game: ' and game_status:
+    if update.message.text[:6]=='game: ':
         try:
             if puzzle.action(update.message.text[6:]):
                 message=puzzle.get_board()
@@ -69,7 +75,6 @@ def echo(update: Update, context: CallbackContext):
                 if puzzle.board.check_for_solving():
                     message+='\n SOLVED!'
                     game_status=False
-                    global game_status
             else: update.message.reply_text('Wrong command format \nTry again')
         except BaseException:
             update.message.reply_text('First start a game')
@@ -106,6 +111,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('weather', weather))
     updater.dispatcher.add_handler(CommandHandler('dynamics', corona_stats_dynamics))
     updater.dispatcher.add_handler(CommandHandler('game', game))
+    gamesetup()
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
