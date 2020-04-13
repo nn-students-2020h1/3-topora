@@ -62,3 +62,4 @@ class Board:
         self.numbs.clear()
         for i in range(1,self.size*self.size):
             self.numbs.append(Numbers(i,self.Start_poses[pos_number][i][0],self.Start_poses[pos_number][i][1]))
+
