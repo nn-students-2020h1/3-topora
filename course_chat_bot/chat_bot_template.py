@@ -1,4 +1,5 @@
 
+
 #!/usr/local/bin/python3
 # -*- coding: utf-8 -*-
 
@@ -6,6 +7,7 @@ import logging
 from calculation_class import  calculatons
 from log_class import logger as func_logger
 from operator import itemgetter
+from game import BossPuzzle
 
 from setup import PROXY, TOKEN
 from telegram import Bot, Update
@@ -18,11 +20,29 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 log=func_logger()
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 @log.log_func
 def corona_stats_dynamics(update: Update, context: CallbackContext):
     update.message.reply_text(calculatons.corona_stats_dynamics())
+
+
+
+
+@log.log_func
+def game(update: Update, context: CallbackContext):
+    game_status=True
+    puzzle.start_new_game()
+    update.message.reply_text(puzzle.get_board()+'\n'
+                              +'Game has started'+'\n'
+                              +'Type:"game: *coordinates* *coordinates*" to play')
+
+def gamesetup():
+    global puzzle
+    puzzle=BossPuzzle()
+    global game_status
+    game_status=False
 
 @log.log_func
 def corono_stats(update: Update, context: CallbackContext):
@@ -47,7 +67,19 @@ def chat_help(update: Update, context: CallbackContext):
 @log.log_func
 def echo(update: Update, context: CallbackContext):
     """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    if update.message.text[:6]=='game: ':
+        try:
+            if puzzle.action(update.message.text[6:]):
+                message=puzzle.get_board()
+                update.message.reply_text(puzzle.get_board())
+                if puzzle.board.check_for_solving():
+                    message+='\n SOLVED!'
+                    game_status=False
+            else: update.message.reply_text('Wrong command format \nTry again')
+        except BaseException:
+            update.message.reply_text('First start a game')
+    else:
+        update.message.reply_text(update.message.text)
 
 @log.log_func
 def chat_history(update: Update, context: CallbackContext):
@@ -78,6 +110,8 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('corono_stats',corono_stats))
     updater.dispatcher.add_handler(CommandHandler('weather', weather))
     updater.dispatcher.add_handler(CommandHandler('dynamics', corona_stats_dynamics))
+    updater.dispatcher.add_handler(CommandHandler('game', game))
+    gamesetup()
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
@@ -85,7 +119,6 @@ def main():
     updater.dispatcher.add_error_handler(error)
     # Start the Bot
     updater.start_polling()
-    calculatons.get_corona_dictlist_yesterday()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
@@ -95,3 +128,5 @@ def main():
 if __name__ == '__main__':
     logger.info('Start Bot')
     main()
+
+ 
