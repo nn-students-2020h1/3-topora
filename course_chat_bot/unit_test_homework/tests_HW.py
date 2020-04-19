@@ -1,10 +1,14 @@
 import unittest
-from  calculator_test_homework import Calculator
+from calculator_test_homework import Calculator
 
-class Test_calculator(unittest.TestCase):
+
+class TestCalculator(unittest.TestCase):
+
+    def test_sub(self):
+        self.assertEqual(Calculator.sub(10,1),9)
 
     def test_div(self):
-        self.assertEqual(Calculator.div(1,2),1/2)
+        self.assertEqual(Calculator.div(1, 2), 1/2)
 
     def test_add(self):
         self.assertNotEqual(Calculator.add(1,2),2)
@@ -26,24 +30,34 @@ class Test_calculator(unittest.TestCase):
     def test_calcalation_int_1(self):
         self.assertIsNot([2],[Calculator.add(1,1)])
 
+    def test_calculation_int_div(self):
+        self.assertEqual(Calculator.calculate_int(4, 2, '/'),2)
+
+    def test_calculation_sub(self):
+        self.assertEqual(Calculator.calculate_int(2, 1, '-'), 1)
+
     def test_div_except(self):
-        self.assertRaises(BaseException,Calculator.div(1,0))
+        self.assertEqual(Calculator.div(1,0),0)
+        #self.assertRaises(BaseException, Calculator.div, 1, 0)
 
     def test_calculate_none(self):
-        c=Calculator.calculate(1,2,'+')
-        self.assertIsNotNone(Calculator.calculate(1,2,'+'))
+        self.assertIsNotNone(Calculator.calculate_int(1, 2, '+'))
 
     def test_operator_tuple_0(self):
         self.assertIn('+',Calculator.operator_tuple_int)
 
     def test_calculation_0(self):
-        self.assertIsNone(Calculator.calculate(2,3,'&'))
+        self.assertIsNone(Calculator.calculate_int(2,3,'&'))
 
     def test_calculation_str_1(self):
-        self.assertIsInstance(Calculator.calculate(1,2,'+'),int)
+        self.assertIsInstance(Calculator.calculate_int(1,2,'+'),int)
 
     def test_calculation_str_2(self):
         self.assertNotIsInstance(Calculator.calculate('2','3','+'),int)
+
     def test_calculation_str_3(self):
         self.assertWarns(Warning,Calculator.calculate,'','warn me please','+')
+
+    def test_check_operator_str(self):
+        pass
 

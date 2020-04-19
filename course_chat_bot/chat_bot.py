@@ -4,7 +4,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from calculation_class import  calculatons
+from calculation_class import Calculations
 from log_class import logger as func_logger
 from operator import itemgetter
 from game import BossPuzzle
@@ -25,7 +25,7 @@ log=func_logger()
 # context. Error handlers also receive the raised TelegramError object in error.
 @log.log_func
 def corona_stats_dynamics(update: Update, context: CallbackContext):
-    update.message.reply_text(calculatons.corona_stats_dynamics())
+    update.message.reply_text(Calculations.corona_stats_dynamics())
 
 
 
@@ -46,12 +46,12 @@ def gamesetup():
 
 @log.log_func
 def corono_stats(update: Update, context: CallbackContext):
-    update.message.reply_text(calculatons.get_corona_dictlist_yesterday())
+    update.message.reply_text(Calculations.get_msg_for_corona())
 
 
 @log.log_func
 def weather(update: Update, context: CallbackContext):
-    update.message.reply_text(calculatons.get_weather())
+    update.message.reply_text(Calculations.get_weather())
 
 @log.log_func
 def start(update: Update, context: CallbackContext):
@@ -87,7 +87,7 @@ def chat_history(update: Update, context: CallbackContext):
 
 @log.log_func
 def fact(update: Update, context: CallbackContext):
-    update.message.reply_text(calculatons.get_cat_fact())
+    update.message.reply_text(Calculations.get_cat_fact())
 
 
 @log.log_func
