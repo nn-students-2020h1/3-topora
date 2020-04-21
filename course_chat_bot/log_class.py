@@ -1,5 +1,4 @@
 import datetime
-import logging
 from telegram import Bot, Update
 
 
@@ -10,10 +9,6 @@ class Logger:
     def log_func(self, func):
         def inner(*args, **kwargs):
             """For showing time"""
-            logging.basicConfig(format='%(asctime)s - %(name)s'
-                                       ' - %(levelname)s - %(message)s',
-                                level=logging.INFO)
-            inner_logger = logging.getLogger(__name__)
             now = datetime.datetime.now()
             func(*args, **kwargs)
             info = dict()
@@ -30,7 +25,6 @@ class Logger:
             with open("bot_log.txt", "a", encoding="utf-8") as log_open:
                 for i in range(len(self.log)):
                     print(self.log[i], file=log_open)
-            inner_logger.info(self.log)
         return inner
 
     def last_5_history(self, update: Update):
