@@ -1,5 +1,3 @@
-
-
 class Numbers:
     def __init__(self,numb: int,x: int,y:int):
         self.numb=numb

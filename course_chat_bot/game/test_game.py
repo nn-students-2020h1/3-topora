@@ -1,8 +1,8 @@
 import unittest
 from unittest import mock
-from Board import Numbers, Board
-from game import BossPuzzle
-from Renderer import Renderer
+from game.Board import Numbers, Board
+from game.game import BossPuzzle
+from game.Renderer import Renderer
 import random
 
 
@@ -80,3 +80,6 @@ class TestBoard(unittest.TestCase):
         puzzle = BossPuzzle()
         puzzle.start_new_game()
         self.assertEqual(puzzle.board.numbs[1].x,Board.Start_poses[0][1][0])
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,6 +1,4 @@
-
-from Board import Board
-from Renderer import Renderer
+from game.Board import Board
 import random
 
 
@@ -10,7 +8,6 @@ class BossPuzzle:
 
     def __init__(self):
         self.board = Board(BossPuzzle.Board_size)
-
 
     def get_board(self):
         return self.Renderer.render(self.board)
@@ -22,11 +19,11 @@ class BossPuzzle:
     def action(self, command: str):
         coordinates = {}
         try:
-            coordinates['first_x']=ord(command.split()[0][0])-ord('a')+1
-            coordinates['first_y']=int(command.split()[0][1])
-            coordinates['second_x']=ord(command.split()[1][0])-ord('a')+1
-            coordinates['second_y']=int(command.split()[1][1])
-            if  not self.board.move_cells(coordinates):
+            coordinates['first_x'] = ord(command.split()[0][0])-ord('a')+1
+            coordinates['first_y'] = int(command.split()[0][1])
+            coordinates['second_x'] = ord(command.split()[1][0])-ord('a')+1
+            coordinates['second_y'] = int(command.split()[1][1])
+            if not self.board.move_cells(coordinates):
                 return False
             return True
         except BaseException:

@@ -61,3 +61,6 @@ class TestCalculator(unittest.TestCase):
     def test_check_operator_str(self):
         pass
 
+
+if __name__ == '__main__':
+    unittest.main()
