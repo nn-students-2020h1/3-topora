@@ -8,7 +8,8 @@ class Calculations:
 
     @staticmethod
     def get_msg_for_corona():    # str
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        logging.basicConfig(format='%(asctime)s - %(name)s'
+                                   ' - %(levelname)s - %(message)s',
                             level=logging.INFO)
         date = datetime.date.today() - datetime.timedelta(days=1)
         try:
@@ -54,14 +55,16 @@ class Calculations:
     @staticmethod
     def sort_corona_dict(req: requests.Response):
         sort_dictlist = req.content.decode('utf-8')
-        sort_dictlist = list(csv.DictReader(sort_dictlist.splitlines(), delimiter=','))
+        sort_dictlist = list(csv.DictReader(
+            sort_dictlist.splitlines(), delimiter=','))
         sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
             record['Confirmed']), reverse=True)
         return sort_dictlist
 
     @staticmethod
     def corona_stats_dynamics():
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        logging.basicConfig(format='%(asctime)s - %(name)s'
+                                   ' - %(levelname)s - %(message)s',
                             level=logging.INFO)
         logger = logging.getLogger(__name__)
         data = datetime.date.today() - datetime.timedelta(days=1)
@@ -70,7 +73,8 @@ class Calculations:
         req_today = Calculations.get_corona_data_by_date(data)
         yesterday = Calculations.sum_confirmed(req_yesterday)
         today = Calculations.sum_confirmed(req_today)
-        msg = "Со вчерашнего дня заразилось " + str(today-yesterday) + " человек"
+        msg = "Со вчерашнего дня заразилось " + \
+              str(today-yesterday) + " человек"
         return msg
 
     @staticmethod
@@ -100,7 +104,8 @@ class Calculations:
         while html_weather[position + counter] != "<":
             temperature += html_weather[position + counter]
             counter += 1
-        position = html_weather.find('<div class="link__condition day-anchor i-bem" data-bem=') + len(
+        position = html_weather.find('<div class="link__condition'
+                                     ' day-anchor i-bem" data-bem=') + len(
             '<div class="link__condition day-anchor i-bem" data-bem=')
         fl = False
         condition = ''

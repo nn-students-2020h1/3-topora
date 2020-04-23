@@ -75,7 +75,6 @@ class Calculator:
         if not access:
             return None
         if operator == '+':
-            return Calculator.add(str1,str2)
+            return Calculator.add(str1, str2)
         elif operator == '-':
-            return Calculator.sub_str(str1,str2)
-
+            return Calculator.sub_str(str1, str2)

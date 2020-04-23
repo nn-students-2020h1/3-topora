@@ -8,17 +8,17 @@ class Renderer:
         coord_list = []  # x: int , y: int
         render_queue = []
         for i in range(board.size*board.size):
-            coord_list.append([((i)//board.size)+1,((i)%board.size)+1])
+            coord_list.append([i // board.size + 1, i % board.size+1])
         for cell in coord_list:
-            if cell[0] == board.freecell[0] and cell[1]==board.freecell[1]:
+            if cell[0] == board.freecell[0] and cell[1] == board.freecell[1]:
                 render_queue.append(0)
             for numb in board.numbs:
-                if numb.x == cell[0] and numb.y==cell[1]:
+                if numb.x == cell[0] and numb.y == cell[1]:
                     render_queue.append(numb.numb)
         return render_queue
 
     @staticmethod
-    def symbol_translate( numb: int):  # string
+    def symbol_translate(numb: int):  # string
         if numb > 0:
             return chr(9312+numb-1)
         else:
@@ -39,4 +39,3 @@ class Renderer:
                 board_draw += '\n'+str(counter)+' '
             board_draw += Renderer.symbol_translate(render_queue[i-1])
         return board_draw
-
