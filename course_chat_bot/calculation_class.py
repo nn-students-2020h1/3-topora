@@ -2,7 +2,6 @@ import datetime
 import requests
 import logging
 import csv
-import os
 
 
 class Calculations:
@@ -54,14 +53,10 @@ class Calculations:
 
     @staticmethod
     def sort_corona_dict(req: requests.Response):
-        with open('now.csv', 'wb+') as now:
-            now.write(req.content)
-        with open('now.csv', 'r') as now:
-            now_dict = csv.DictReader(now)
-            sort_dictlist = list(now_dict)
-            sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
-                record['Confirmed']), reverse=True)
-        os.remove('now.csv')
+        sort_dictlist = req.content.decode('utf-8')
+        sort_dictlist = list(csv.DictReader(sort_dictlist.splitlines(), delimiter=','))
+        sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
+            record['Confirmed']), reverse=True)
         return sort_dictlist
 
     @staticmethod

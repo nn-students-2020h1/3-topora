@@ -4,7 +4,7 @@
 import logging
 from calculation_class import Calculations
 from log_class import Logger as func_logger
-from game import BossPuzzle
+from game.game import BossPuzzle
 
 from setup import PROXY, TOKEN
 from telegram import Bot, Update
@@ -66,6 +66,15 @@ def start(update: Update, context: CallbackContext):
 @log.log_func
 def chat_help(update: Update, context: CallbackContext):
     """Send a message when the command /help is issued."""
+    msg = 'Here is what you can do\n' \
+          '/start to start\n' \
+          '/weather to view weather\n' \
+          '/game to play the 15-Puzzle\n' \
+          '/fact to get cat fact\n' \
+          '/corona_stats to view latest corona-virus' \
+          ' statistic(for all the time)\n' \
+          '/corona_dynamics to view latest corona-virus dynamics\n' \
+
     update.message.reply_text('Введи команду /start для начала. ')
 
 
@@ -118,7 +127,7 @@ def main():
                                    ('corono_stats', corono_stats))
     updater.dispatcher.add_handler(CommandHandler('weather', weather))
     updater.dispatcher.add_handler(CommandHandler
-                                   ('dynamics', corona_stats_dynamics))
+                                   ('corona_dynamics', corona_stats_dynamics))
     updater.dispatcher.add_handler(CommandHandler('game', game))
     gamesetup()
     # on noncommand i.e message - echo the message on Telegram
