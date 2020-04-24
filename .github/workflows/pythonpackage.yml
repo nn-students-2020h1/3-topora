@@ -41,4 +41,4 @@ jobs:
     - name: Run coverage
       run: |
         pip install coverage
-        coverage run -m unittest discover course_chat_bot\tests && coverage report -m
+        coverage run -m unittest discover && coverage report -m
