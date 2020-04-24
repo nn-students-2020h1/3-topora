@@ -41,4 +41,4 @@ jobs:
     - name: Run coverage
       run: |
         pip install coverage
-        coverage run -m unittest discover && coverage report -m
+        coverage run -m unittest discover tests && coverage report -m
