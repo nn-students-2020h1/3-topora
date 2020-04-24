@@ -1,8 +1,8 @@
 import unittest
 from unittest import mock
-from game.Board import Board
-from game.game import BossPuzzle
-from game.Renderer import Renderer
+from Board import Board
+from game import BossPuzzle
+from Renderer import Renderer
 import random
 
 
