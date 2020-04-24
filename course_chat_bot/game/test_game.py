@@ -1,8 +1,8 @@
 import unittest
 from unittest import mock
-from Board import Board
-from game import BossPuzzle
-from Renderer import Renderer
+from course_chat_bot.game.Board import Board
+from course_chat_bot.game.game import BossPuzzle
+from course_chat_bot.game.Renderer import Renderer
 import random
 
 
