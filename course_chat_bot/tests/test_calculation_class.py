@@ -1,6 +1,6 @@
 import unittest
 from unittest import mock
-from calculation_class import Calculations
+from course_chat_bot.calculation_class import Calculations
 import datetime
 import requests
 

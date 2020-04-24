@@ -1,5 +1,6 @@
 import unittest
-from calculator_test_homework import Calculator
+from course_chat_bot.unit_test_homework.calculator_test_homework\
+    import Calculator
 
 
 class TestCalculator(unittest.TestCase):
