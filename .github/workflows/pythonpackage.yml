@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ master , branch_S]
+    branches: [ master , branch_S, features]
   pull_request:
-    branches: [ master ,branch_S]
+    branches: [ master ,branch_S, features]
 
 jobs:
   build:
@@ -41,4 +41,4 @@ jobs:
     - name: Run coverage
       run: |
         pip install coverage
-        coverage run -m unittest discover tests && coverage report -m
+        coverage run -m unittest discover && coverage report -m
