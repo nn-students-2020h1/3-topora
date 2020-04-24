@@ -73,9 +73,8 @@ def chat_help(update: Update, context: CallbackContext):
           '/fact to get cat fact\n' \
           '/corona_stats to view latest corona-virus' \
           ' statistic(for all the time)\n' \
-          '/corona_dynamics to view latest corona-virus dynamics\n' \
-
-    update.message.reply_text('Введи команду /start для начала. ')
+          '/corona_dynamics to view latest corona-virus dynamics\n'
+    update.message.reply_text(msg)
 
 
 @log.log_func
