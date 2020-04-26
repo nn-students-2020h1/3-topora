@@ -33,7 +33,7 @@ class TestCalculationClass(unittest.TestCase):
                           Calculations.get_corona_data_by_date(date))
 
     def test_sort_dictlist_1(self):
-        date = datetime.date(2020, 3, 10)
+        date = datetime.date(2020, 4, 25)
         req = Calculations.get_corona_data_by_date(date)
         self.assertIsInstance(Calculations.sort_corona_dict(req), list)
 

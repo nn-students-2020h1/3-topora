@@ -2,7 +2,7 @@ import datetime
 import requests
 import logging
 import csv
-
+import pymongo
 
 class Calculations:
 
@@ -54,12 +54,56 @@ class Calculations:
 
     @staticmethod
     def sort_corona_dict(req: requests.Response):
-        sort_dictlist = req.content.decode('utf-8')
-        sort_dictlist = list(csv.DictReader(
-            sort_dictlist.splitlines(), delimiter=','))
+        #открываю бд и смотрю последнюю запись по дате если нет то добавляю
+        #бд по датам и которая говорит есть ли бд с нудным файлом покороне
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        corona_collection_today = bd.corona_today
+        corona_collection_yesterday = bd.corona_yesterday
+        date_collection = bd.date
+        Calculations.db_corona_write(req)
+        corona_file_exists = False
+        Calculations.db_corona_write(req)
+        for line in corona_collection_today.find():
+            date_list = {}
+            date_list['year'] = (int(line['Last_Update'][:10].split('-')[0]))
+            date_list['month'] = (int(line['Last_Update'][:10].split('-')[1]))
+            date_list['day'] = (int(line['Last_Update'][:10].split('-')[2]))
+            if date_list['year'] == datetime.date.today().year \
+                and date_list['month'] == datetime.date.today().month \
+                and date_list['day'] == datetime.date.today().day:
+                corona_file_exists = True
+        if not corona_file_exists:
+            #в yesterday идет копия today
+            Calculations.copy_today_to_yesterday()
+            Calculations.db_corona_write(req)
+        sort_dictlist = []
+        for line in corona_collection_today.find():
+            sort_dictlist.append(line)
         sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
             record['Confirmed']), reverse=True)
         return sort_dictlist
+
+    @staticmethod
+    def copy_today_to_yesterday():
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        corona_collection_yesterday = bd.corona_yesterday
+        corona_collection_yesterday.drop()
+        corona_collection_today = bd.corona_today
+        for line in corona_collection_today.find():
+            corona_collection_yesterday.insert_one(line)
+
+    @staticmethod
+    def db_corona_write(req: requests.Response):
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        corona_collection_today = bd.corona_today
+        corona_collection_today.drop()
+        list_regions = list(csv.DictReader(req.content.decode('utf-8').splitlines(), delimiter=','))
+        for line in list_regions:
+            corona_collection_today.insert_one(line)
+
 
     @staticmethod
     def corona_stats_dynamics():
