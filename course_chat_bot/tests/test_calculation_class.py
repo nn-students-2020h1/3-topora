@@ -42,6 +42,7 @@ class TestCalculationClass(unittest.TestCase):
         req = Calculations.get_corona_data_by_date(date)
         self.assertIsInstance(Calculations.sort_corona_dict(req)[0], dict)
 
+
     def test_sum_confirmed_1(self):
         date = datetime.date(2020, 3, 10)
         req = Calculations.get_corona_data_by_date(date)
