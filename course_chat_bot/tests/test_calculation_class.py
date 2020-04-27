@@ -33,7 +33,7 @@ class TestCalculationClass(unittest.TestCase):
                           Calculations.get_corona_data_by_date(date))
 
     def test_sort_dictlist_1(self):
-        date = datetime.date(2020, 4, 25)
+        date = datetime.date(2020, 4, 26)
         req = Calculations.get_corona_data_by_date(date)
         self.assertIsInstance(Calculations.sort_corona_dict(req), list)
 
@@ -78,17 +78,11 @@ class TestCalculationClass(unittest.TestCase):
     def test_get_cat_fact_2(self, mocked_get):
         self.assertIsInstance(Calculations.get_cat_fact(), str)
 
-    @mock.patch.object(requests.Response, 'json', return_value=None)
-    def test_fact_parse_1(self, mocked_json):
-        r = requests.get('https://cat-fact.herokuapp.com/facts')
-        self.assertRaises(BaseException, Calculations.fact_parse(r))
+    def test_today_yesterday_diff(self):
+        self.assertIsInstance(Calculations.today_yesterday_diff(), int)
 
-    def test_fact_parse_2(self):
-        self.assertRaises(BaseException, Calculations.fact_parse(None))
-
-    def test_fact_parse_3(self):
-        r = requests.get('https://cat-fact.herokuapp.com/facts')
-        self.assertIsInstance(Calculations.fact_parse(r), str)
+    def test_fact_selection(self):
+        self.assertIsInstance(Calculations.fact_selection(), str)
 
 
 if __name__ == '__main__':

@@ -3,14 +3,12 @@ import requests
 import logging
 import csv
 import pymongo
+from random import random
 
 class Calculations:
 
     @staticmethod
     def get_msg_for_corona():    # str
-        logging.basicConfig(format='%(asctime)s - %(name)s'
-                                   ' - %(levelname)s - %(message)s',
-                            level=logging.INFO)
         date = datetime.date.today() - datetime.timedelta(days=1)
         try:
             req = Calculations.get_corona_data_by_date(date)
@@ -54,35 +52,38 @@ class Calculations:
 
     @staticmethod
     def sort_corona_dict(req: requests.Response):
-        #открываю бд и смотрю последнюю запись по дате если нет то добавляю
-        #бд по датам и которая говорит есть ли бд с нудным файлом покороне
         client = pymongo.MongoClient()
         bd = client.mongo_bd
         corona_collection_today = bd.corona_today
-        corona_collection_yesterday = bd.corona_yesterday
-        date_collection = bd.date
-        Calculations.db_corona_write(req)
-        corona_file_exists = False
-        Calculations.db_corona_write(req)
-        for line in corona_collection_today.find():
-            date_list = {}
-            date_list['year'] = (int(line['Last_Update'][:10].split('-')[0]))
-            date_list['month'] = (int(line['Last_Update'][:10].split('-')[1]))
-            date_list['day'] = (int(line['Last_Update'][:10].split('-')[2]))
-            if date_list['year'] == datetime.date.today().year \
-                and date_list['month'] == datetime.date.today().month \
-                and date_list['day'] == datetime.date.today().day:
-                corona_file_exists = True
-        if not corona_file_exists:
-            #в yesterday идет копия today
-            Calculations.copy_today_to_yesterday()
-            Calculations.db_corona_write(req)
+        Calculations.data_check(corona_collection_today)
         sort_dictlist = []
         for line in corona_collection_today.find():
             sort_dictlist.append(line)
         sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
             record['Confirmed']), reverse=True)
         return sort_dictlist
+
+    @staticmethod
+    def data_check(corona_collection_today):
+        corona_file_exists = False
+        for line in corona_collection_today.find():
+            date_list = {}
+            date_list['year'] = (int(line['Last_Update'][:10].split('-')[0]))
+            date_list['month'] = (int(line['Last_Update'][:10].split('-')[1]))
+            date_list['day'] = (int(line['Last_Update'][:10].split('-')[2]))
+            if date_list['year'] == datetime.date.today().year \
+                    and date_list['month'] == datetime.date.today().month \
+                    and date_list['day'] == datetime.date.today().day:
+                corona_file_exists = True
+        if not corona_file_exists:
+            Calculations.data_download()
+
+    @staticmethod
+    def data_download():
+        Calculations.copy_today_to_yesterday()
+        date = datetime.date.today() - datetime.timedelta(days=1)
+        req = Calculations.get_corona_data_by_date(date)
+        Calculations.db_corona_write(req)
 
     @staticmethod
     def copy_today_to_yesterday():
@@ -101,38 +102,32 @@ class Calculations:
         corona_collection_today = bd.corona_today
         corona_collection_today.drop()
         list_regions = list(csv.DictReader(req.content.decode('utf-8').splitlines(), delimiter=','))
+        for row in list_regions:
+            row['Confirmed'] = int(row['Confirmed'])
         for line in list_regions:
             corona_collection_today.insert_one(line)
 
-
     @staticmethod
     def corona_stats_dynamics():
-        logging.basicConfig(format='%(asctime)s - %(name)s'
-                                   ' - %(levelname)s - %(message)s',
-                            level=logging.INFO)
-        logger = logging.getLogger(__name__)
-        data = datetime.date.today() - datetime.timedelta(days=1)
-        date_prev = data-datetime.timedelta(days=1)
-        req_yesterday = Calculations.get_corona_data_by_date(date_prev)
-        req_today = Calculations.get_corona_data_by_date(data)
-        yesterday = Calculations.sum_confirmed(req_yesterday)
-        today = Calculations.sum_confirmed(req_today)
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        corona_collection_today = bd.corona_today
+        Calculations.data_check(corona_collection_today)
         msg = "Со вчерашнего дня заразилось " + \
-              str(today-yesterday) + " человек"
+              str(Calculations.today_yesterday_diff()) + " человек"
         return msg
 
     @staticmethod
-    def sum_confirmed(req: requests.Response):
-        sum_conf = 0
-        with open('now.csv', 'wb+') as now:
-            now.write(req.content)
-        with open('now.csv', 'r') as now:
-            now_dict = csv.DictReader(now)
-            amount = []
-            for row in now_dict:
-                amount.append(int(row['Confirmed']))
-            sum_conf = sum(amount)
-        return sum_conf
+    def today_yesterday_diff():
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        corona_collection_today = bd.corona_today
+        corona_collection_yesterday = bd.corona_yesterday
+        sum_today = list(corona_collection_today.aggregate
+                         ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
+        sum_yesterday = list(corona_collection_yesterday.aggregate
+                             ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
+        return sum_today-sum_yesterday
 
     @staticmethod
     def get_weather():  # str
@@ -187,24 +182,35 @@ class Calculations:
 
     @staticmethod
     def get_cat_fact():
-        r = requests.get('https://cat-fact.herokuapp.com/facts')
-        if r.status_code != 200:
-            return 'Error occurred'
         try:
-            msg = Calculations.fact_parse(r)
+            msg = Calculations.fact_selection()
         except BaseException:
-            return 'Error occurred'
+            return "Error occurred"
         return f'Fact: \n{msg}'
 
     @staticmethod
-    def fact_parse(req: requests.Response):  # str
-        try:
-            d = req.json()
-            maxv = 0
-            for i in range(len(d['all'])):
-                if d['all'][i]['upvotes'] >= maxv:
-                    maxv = d['all'][i]['upvotes']
-                    fact = d['all'][i]['text']
-            return fact
-        except BaseException:
-            return None
+    def fact_selection():
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        cat_facts = bd.cat_facts
+        numb = int(random()*20)
+        record = cat_facts.find_one({'id': numb})
+        if not type(record['text']) == str:
+            Calculations.cat_database_set_up(cat_facts)
+            record = cat_facts.find_one({'id': numb})
+        return record['text']
+
+    @staticmethod
+    def cat_database_set_up(cat_facts):
+        req = requests.get('https://cat-fact.herokuapp.com/facts')
+        if req.status_code != 200:
+            return 'Error occurred'
+        cat_facts.drop()
+        json_facts = req.json()
+        most_upvoted = sorted(json_facts['all'], key=lambda fact: int(fact['upvotes']), reverse=True)
+        counter = 0
+        for line in most_upvoted:
+            line['id'] = counter
+            counter += 1
+        cat_facts.insert_many(most_upvoted)
+
