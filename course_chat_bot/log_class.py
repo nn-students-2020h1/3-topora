@@ -5,6 +5,7 @@ import pymongo
 class Logger:
     def __init__(self):
         self.log = []
+        self.client = pymongo.MongoClient
 
     def log_func(self, func):
         def inner(*args, **kwargs):
@@ -12,8 +13,7 @@ class Logger:
             now = datetime.datetime.now()
             func(*args, **kwargs)
             info = dict()
-            client = pymongo.MongoClient()
-            bd = client.mongo_bd
+            bd = self.client.mongo_bd
             collection = bd.students
             info["username"] = args[0].effective_user.first_name
             try:
@@ -25,7 +25,11 @@ class Logger:
             info["message"] = args[0].message.text
             info["date"] = str(now)
             collection.insert_one(info)
+            pass
         return inner
+
+    def bd_write(self):
+        pass
 
     def last_5_history(self, update: Update):
         """Echo the user history."""
@@ -34,9 +38,8 @@ class Logger:
         """File with the name of user"""
         # может вынести поиск по логу в класс
         try:
-            client = pymongo.MongoClient()
-            bd = client.mongo_bd
-            collection = client.mongo_bd.students
+            bd = self.client.mongo_bd
+            collection = self.client.mongo_bd.students
         except BaseException:
             return 'Error occurred'
         count = 0

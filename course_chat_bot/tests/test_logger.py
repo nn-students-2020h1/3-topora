@@ -3,6 +3,7 @@ from unittest import mock
 from course_chat_bot.log_class import Logger
 import datetime
 import pymongo
+import mongomock
 
 logger = Logger()
 
@@ -20,12 +21,16 @@ class TestLoggerLogFunc(unittest.TestCase):
         self.update.effective_user.first_name = 'Jack'
         self.update.effective_user.username = "Jack nickname"
         self.update.effective_user.last_name = None
+        pymongo.MongoClient = mongomock.MongoClient
+        logger.client = mongomock.MongoClient()
         self.client = pymongo.MongoClient()
-        self.collection = self.client.mongo_bd.students
+        self.collection =logger.client.logger.client.mongo_bd.students
 
     def test_log_func(self):
         count_doc = self.collection.count_documents({})
         simple_action(self.update)
+        for line in self.collection.find():
+            print(line)
         self.assertEqual(count_doc + 1, self.collection.count_documents({}))
 
     def test_log_func_order(self):
@@ -35,7 +40,8 @@ class TestLoggerLogFunc(unittest.TestCase):
         simple_action(self.update)
         for line in self.collection.find().sort(
                 '_id', pymongo.DESCENDING).limit(1):
-             last = line
+            print(line)
+            last = line
         self.assertEqual(last['message'], 'last')
 
     def test_log_func_func_name(self):
