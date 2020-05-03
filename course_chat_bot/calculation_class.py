@@ -76,7 +76,6 @@ class Calculations:
 
     @staticmethod
     def _corona_data_download(bd, date, corona_data):
-        #collection = bd[str(date.day) + str(date.month) + str(date.year)]
         for row in list(csv.DictReader(corona_data.content.decode(
                 'utf-8').splitlines(), delimiter=',')):
             row['Confirmed'] = int(row['Confirmed'])
