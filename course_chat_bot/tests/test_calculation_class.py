@@ -1,11 +1,16 @@
 import unittest
 from unittest import mock
 from course_chat_bot.calculation_class import Calculations
-import datetime
+from datetime import date
 import requests
+import mongomock
+import pymongo
 
 
 class TestCalculationClass(unittest.TestCase):
+
+    def setUp(self):
+        Calculations.client = mongomock.MongoClient()
 
     @mock.patch.object(Calculations, "get_corona_data_by_date",
                        return_value=None)
@@ -19,41 +24,31 @@ class TestCalculationClass(unittest.TestCase):
         self.assertEqual(type(Calculations.get_msg_for_corona()), str)
 
     def test__get_corona_data_by_date_1(self):
-        Date = datetime.date(2020, 3, 10)
+        Date = date(2020, 3, 10)
         self.assertIsNotNone(Calculations.get_corona_data_by_date(Date))
 
     def test__get_corona_data_by_date_3(self):
-        date = datetime.date(2020, 3, 10)
-        self.assertIsInstance(Calculations.get_corona_data_by_date(date),
+        Date = date(2020, 3, 10)
+        self.assertIsInstance(Calculations.get_corona_data_by_date(Date),
                               requests.Response)
 
     def test_get_corona_data_by_date_2(self):
-        date = datetime.date(2019, 1, 1)
+        Date = date(2019, 1, 1)
         self.assertRaises(BaseException,
-                          Calculations.get_corona_data_by_date(date))
+                          Calculations.get_corona_data_by_date(Date))
 
     def test_sort_dictlist_1(self):
-        date = datetime.date(2020, 4, 26)
-        req = Calculations.get_corona_data_by_date(date)
-        self.assertIsInstance(Calculations.sort_corona_dict(req), list)
+        Date = date(2020, 4, 26)
+        self.assertIsInstance(Calculations.sort_corona_dict(), list)
 
     def test_sort_dictlist_2(self):
-        date = datetime.date(2020, 3, 10)
+        Date = date(2020, 3, 10)
         req = Calculations.get_corona_data_by_date(date)
         self.assertIsInstance(Calculations.sort_corona_dict(req)[0], dict)
 
-
-    def test_sum_confirmed_1(self):
-        date = datetime.date(2020, 3, 10)
-        req = Calculations.get_corona_data_by_date(date)
-        self.assertTrue(Calculations.sum_confirmed(req) > 0)
-
-    def test_sum_confirmed_2(self):
-        date = datetime.date(2020, 3, 10)
-        req = Calculations.get_corona_data_by_date(date)
-        self.assertIsInstance(Calculations.sum_confirmed(req), int)
-
     def test_corona_stats_dynamics_1(self):
+        #перед этим тестом придется загрузить в бд корона дату за вчера и за сегодня
+        #date.today.return_value = date(2020, 3, 10)
         self.assertIsInstance(Calculations.corona_stats_dynamics(), str)
 
     def test_get_position_weather_1(self):
@@ -71,6 +66,9 @@ class TestCalculationClass(unittest.TestCase):
         self.assertIsInstance(Calculations.get_weather(), str)
 
     def test_get_cat_fact_1(self):
+        client = pymongo.MongoClient()
+        cat_facts = client.mongo_bd.cat_facts
+        cat_facts.drop()
         self.assertIsInstance(Calculations.get_cat_fact(), str)
 
     @mock.patch.object(requests, 'get', return_value=requests.get(

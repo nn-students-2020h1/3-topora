@@ -1,18 +1,16 @@
 import datetime
 import requests
-import logging
 import csv
 import pymongo
 from random import random
+
 
 class Calculations:
 
     @staticmethod
     def get_msg_for_corona():    # str
-        date = datetime.date.today() - datetime.timedelta(days=1)
         try:
-            req = Calculations.get_corona_data_by_date(date)
-            sort_dictlist = Calculations.sort_corona_dict(req)
+            sort_dictlist = Calculations.sort_corona_dict()
         except BaseException:
             return 'Error occurred'
         msg = 'Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
@@ -51,11 +49,13 @@ class Calculations:
             return None
 
     @staticmethod
-    def sort_corona_dict(req: requests.Response):
+    def sort_corona_dict():
+        date = datetime.date.today() - datetime.timedelta(days=1)
         client = pymongo.MongoClient()
         bd = client.mongo_bd
-        corona_collection_today = bd.corona_today
-        Calculations.data_check(corona_collection_today)
+        name_date = str(date.day) + str(date.month) + str(date.year)
+        Calculations._data_check(bd, date)
+        corona_collection_today = bd[name_date]
         sort_dictlist = []
         for line in corona_collection_today.find():
             sort_dictlist.append(line)
@@ -64,65 +64,44 @@ class Calculations:
         return sort_dictlist
 
     @staticmethod
-    def data_check(corona_collection_today):
-        corona_file_exists = False
-        for line in corona_collection_today.find():
-            date_list = {}
-            date_list['year'] = (int(line['Last_Update'][:10].split('-')[0]))
-            date_list['month'] = (int(line['Last_Update'][:10].split('-')[1]))
-            date_list['day'] = (int(line['Last_Update'][:10].split('-')[2]))
-            if date_list['year'] == datetime.date.today().year \
-                    and date_list['month'] == datetime.date.today().month \
-                    and date_list['day'] == datetime.date.today().day:
-                corona_file_exists = True
-        if not corona_file_exists:
-            Calculations.data_download()
+    def _data_check(bd, date):
+        if str(date.day) + str(date.month) + str(date.year) in bd.list_collection_names():
+            return 1
+        else:
+            Calculations._corona_data_download(bd, date, Calculations.get_corona_data_by_date(date))
 
     @staticmethod
-    def data_download():
-        Calculations.copy_today_to_yesterday()
-        date = datetime.date.today() - datetime.timedelta(days=1)
-        req = Calculations.get_corona_data_by_date(date)
-        Calculations.db_corona_write(req)
+    def _get_collection_by_date(bd, date):
+        return bd[str(date.day) + str(date.month) + str(date.year)]
 
     @staticmethod
-    def copy_today_to_yesterday():
-        client = pymongo.MongoClient()
-        bd = client.mongo_bd
-        corona_collection_yesterday = bd.corona_yesterday
-        corona_collection_yesterday.drop()
-        corona_collection_today = bd.corona_today
-        for line in corona_collection_today.find():
-            corona_collection_yesterday.insert_one(line)
-
-    @staticmethod
-    def db_corona_write(req: requests.Response):
-        client = pymongo.MongoClient()
-        bd = client.mongo_bd
-        corona_collection_today = bd.corona_today
-        corona_collection_today.drop()
-        list_regions = list(csv.DictReader(req.content.decode('utf-8').splitlines(), delimiter=','))
-        for row in list_regions:
+    def _corona_data_download(bd, date, corona_data):
+        #collection = bd[str(date.day) + str(date.month) + str(date.year)]
+        for row in list(csv.DictReader(corona_data.content.decode(
+                'utf-8').splitlines(), delimiter=',')):
             row['Confirmed'] = int(row['Confirmed'])
-        for line in list_regions:
-            corona_collection_today.insert_one(line)
+            Calculations._get_collection_by_date(bd, date).insert_one(row)
 
     @staticmethod
     def corona_stats_dynamics():
         client = pymongo.MongoClient()
         bd = client.mongo_bd
-        corona_collection_today = bd.corona_today
-        Calculations.data_check(corona_collection_today)
+        Calculations._data_check(bd, datetime.date.today() - datetime.timedelta(days=1))
+        Calculations._data_check(bd, datetime.date.today() - datetime.timedelta(days=2))
         msg = "Со вчерашнего дня заразилось " + \
-              str(Calculations.today_yesterday_diff()) + " человек"
+              str(Calculations.today_yesterday_diff(bd)) + " человек"
         return msg
 
     @staticmethod
-    def today_yesterday_diff():
-        client = pymongo.MongoClient()
-        bd = client.mongo_bd
-        corona_collection_today = bd.corona_today
-        corona_collection_yesterday = bd.corona_yesterday
+    def date_to_col_name(date):
+        return str(date.day) + str(date.month) + str(date.year)
+
+    @staticmethod
+    def today_yesterday_diff(bd):
+        corona_collection_today = bd[Calculations.date_to_col_name(
+            datetime.date.today() - datetime.timedelta(days=1))]
+        corona_collection_yesterday = bd[Calculations.date_to_col_name(
+            datetime.date.today() - datetime.timedelta(days=2))]
         sum_today = list(corona_collection_today.aggregate
                          ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
         sum_yesterday = list(corona_collection_yesterday.aggregate
@@ -183,22 +162,16 @@ class Calculations:
     @staticmethod
     def get_cat_fact():
         try:
-            msg = Calculations.fact_selection()
+            msg = Calculations.fact_selection(pymongo.MongoClient().mongo_bd)
         except BaseException:
             return "Error occurred"
         return f'Fact: \n{msg}'
 
     @staticmethod
-    def fact_selection():
-        client = pymongo.MongoClient()
-        bd = client.mongo_bd
-        cat_facts = bd.cat_facts
-        numb = int(random()*20)
-        record = cat_facts.find_one({'id': numb})
-        if not type(record['text']) == str:
-            Calculations.cat_database_set_up(cat_facts)
-            record = cat_facts.find_one({'id': numb})
-        return record['text']
+    def fact_selection(bd):
+        if not 'cat_facts' in bd.list_collection_names():
+            Calculations.cat_database_set_up(bd['cat_facts'])
+        return bd['cat_facts'].find_one({'id': int(random() * 20)})['text']
 
     @staticmethod
     def cat_database_set_up(cat_facts):
