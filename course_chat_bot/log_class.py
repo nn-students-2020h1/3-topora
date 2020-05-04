@@ -1,10 +1,12 @@
 import datetime
-from telegram import Bot, Update
+from telegram import Update
+import pymongo
 
 
 class Logger:
     def __init__(self):
         self.log = []
+        self.client = pymongo.MongoClient
 
     def log_func(self, func):
         def inner(*args, **kwargs):
@@ -12,6 +14,8 @@ class Logger:
             now = datetime.datetime.now()
             func(*args, **kwargs)
             info = dict()
+            bd = self.client.mongo_bd
+            collection = bd.students
             info["username"] = args[0].effective_user.first_name
             try:
                 info["username"] += " " + args[0].effective_user.last_name
@@ -21,31 +25,28 @@ class Logger:
             info["funcname"] = func.__name__
             info["message"] = args[0].message.text
             info["date"] = str(now)
-            self.log.append(info)
-            with open("bot_log.txt", "a", encoding="utf-8") as log_open:
-                for i in range(len(self.log)):
-                    print(self.log[i], file=log_open)
+            collection.insert_one(info)
+            pass
         return inner
+
+    def bd_write(self):
+        pass
 
     def last_5_history(self, update: Update):
         """Echo the user history."""
         """message is the answer for a user"""
         message = ''
         """File with the name of user"""
-        # может вынести поиск по логу в класс
-        with open(f"log_{update.effective_user.first_name}.txt",
-                  "a", encoding="utf-8") as fopen:
-            counter = 0
-            """searching last 5 or less messages for this user,
-             logging to the file and forming the answer"""
-            for i in range(len(self.log)):
-                if self.log[len(self.log) - 1 - i]['nickname']\
-                        == update.effective_user.username:
-                    print(self.log[len(self.log) - 1 - i], file=fopen)
-                    message = self.log[len(self.log) - 1 - i]["message"] +\
-                              "\n" + message
-                    counter += 1
-                if counter == 5:
+        try:
+            collection = self.client.mongo_bd.students
+        except BaseException:
+            return 'Error occurred'
+        count = 0
+        for line in collection.find().sort('_id', pymongo.DESCENDING):
+            if line['nickname'] == update.effective_user.username:
+                if count < 5:
+                    count += 1
+                    message += line['message'] + '\n'
+                else:
                     break
-            return f'History:\n{message}'
-        return 'Error occurred'
+        return f'History:\n{message}'

@@ -1,97 +1,36 @@
-import datetime
 import requests
-import logging
-import csv
+import pymongo
+from random import random
+from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
 
 
 class Calculations:
 
     @staticmethod
     def get_msg_for_corona():    # str
-        logging.basicConfig(format='%(asctime)s - %(name)s'
-                                   ' - %(levelname)s - %(message)s',
-                            level=logging.INFO)
-        date = datetime.date.today() - datetime.timedelta(days=1)
         try:
-            req = Calculations.get_corona_data_by_date(date)
-            sort_dictlist = Calculations.sort_corona_dict(req)
+            sort_dictlist = CoronaBdWork(pymongo.MongoClient())\
+                .get_sorted_corona_list()
         except BaseException:
             return 'Error occurred'
         msg = 'Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
         for i in range(0, 5):
+            if i >= len(sort_dictlist):
+                break
             if len((sort_dictlist[i]['Province_State'])) > 0:
                 msg += sort_dictlist[i]['Province_State'] + ':'
             msg += sort_dictlist[i]['Country_Region'] + '\n'
         return msg
 
     @staticmethod
-    def get_corona_data_by_date(date):  # Responce
-        mainurl_corona = 'https://raw.github.com/CSSEGISandData' \
-                         '/COVID-19/master/csse_covid_19_data' \
-                         '/csse_covid_19_daily_reports/'
-        try:
-            if date.day >= 10:
-                if date.month >= 10:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'{str(date.month)}-'
-                                       f'{str(date.day)}-2020.csv')
-                else:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'0{str(date.month)}-'
-                                       f'{str(date.day)}-2020.csv')
-            else:
-                if date.month > 10:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'{str(date.month)}-'
-                                       f'0{str(date.day)}-2020.csv')
-                else:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'0{str(date.month)}-'
-                                       f'0{str(date.day)}-2020.csv')
-            return req
-        except BaseException:
-            return None
-
-    @staticmethod
-    def sort_corona_dict(req: requests.Response):
-        sort_dictlist = req.content.decode('utf-8')
-        sort_dictlist = list(csv.DictReader(
-            sort_dictlist.splitlines(), delimiter=','))
-        sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
-            record['Confirmed']), reverse=True)
-        return sort_dictlist
-
-    @staticmethod
     def corona_stats_dynamics():
-        logging.basicConfig(format='%(asctime)s - %(name)s'
-                                   ' - %(levelname)s - %(message)s',
-                            level=logging.INFO)
-        logger = logging.getLogger(__name__)
-        data = datetime.date.today() - datetime.timedelta(days=1)
-        date_prev = data-datetime.timedelta(days=1)
-        req_yesterday = Calculations.get_corona_data_by_date(date_prev)
-        req_today = Calculations.get_corona_data_by_date(data)
-        yesterday = Calculations.sum_confirmed(req_yesterday)
-        today = Calculations.sum_confirmed(req_today)
-        msg = "Со вчерашнего дня заразилось " + \
-              str(today-yesterday) + " человек"
-        return msg
-
-    @staticmethod
-    def sum_confirmed(req: requests.Response):
-        sum_conf = 0
-        with open('now.csv', 'wb+') as now:
-            now.write(req.content)
-        with open('now.csv', 'r') as now:
-            now_dict = csv.DictReader(now)
-            amount = []
-            for row in now_dict:
-                amount.append(int(row['Confirmed']))
-            sum_conf = sum(amount)
-        return sum_conf
+        return "Со вчерашнего дня заразилось " + \
+              str(CoronaBdWork(pymongo.MongoClient()).
+                  today_yesterday_diff()) + " человек"
 
     @staticmethod
     def get_weather():  # str
+        # TODO: запихать вычисления погоды в sources
         message = ''
         try:
             resp = Calculations.get_position_weather()
@@ -143,24 +82,32 @@ class Calculations:
 
     @staticmethod
     def get_cat_fact():
-        r = requests.get('https://cat-fact.herokuapp.com/facts')
-        if r.status_code != 200:
-            return 'Error occurred'
+        # TODO: запихать работу с базой и фактами тоже в sources
+        #  и там написать на них тесты
         try:
-            msg = Calculations.fact_parse(r)
+            msg = Calculations.fact_selection(pymongo.MongoClient().mongo_bd)
         except BaseException:
-            return 'Error occurred'
+            return "Error occurred"
         return f'Fact: \n{msg}'
 
     @staticmethod
-    def fact_parse(req: requests.Response):  # str
-        try:
-            d = req.json()
-            maxv = 0
-            for i in range(len(d['all'])):
-                if d['all'][i]['upvotes'] >= maxv:
-                    maxv = d['all'][i]['upvotes']
-                    fact = d['all'][i]['text']
-            return fact
-        except BaseException:
-            return None
+    def fact_selection(bd):
+        if 'cat_facts' not in bd.list_collection_names():
+            Calculations.cat_database_set_up(bd['cat_facts'])
+        return bd['cat_facts'].find_one({'id': int(random() * 20)})['text']
+
+    @staticmethod
+    def cat_database_set_up(cat_facts):
+        req = requests.get('https://cat-fact.herokuapp.com/facts')
+        if req.status_code != 200:
+            return 'Error occurred'
+        cat_facts.drop()
+        json_facts = req.json()
+        most_upvoted = sorted(json_facts['all'],
+                              key=lambda fact: int(fact['upvotes']),
+                              reverse=True)
+        counter = 0
+        for line in most_upvoted:
+            line['id'] = counter
+            counter += 1
+        cat_facts.insert_many(most_upvoted)
