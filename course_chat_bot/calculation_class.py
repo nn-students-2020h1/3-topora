@@ -3,6 +3,7 @@ import requests
 import csv
 import pymongo
 from random import random
+from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
 
 
 class Calculations:
@@ -10,7 +11,8 @@ class Calculations:
     @staticmethod
     def get_msg_for_corona():    # str
         try:
-            sort_dictlist = Calculations.sort_corona_dict()
+            sort_dictlist = CoronaBdWork(pymongo.MongoClient())\
+                .get_sorted_corona_list()
         except BaseException:
             return 'Error occurred'
         msg = 'Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
@@ -21,72 +23,12 @@ class Calculations:
         return msg
 
     @staticmethod
-    def get_corona_data_by_date(date):  # Responce
-        mainurl_corona = 'https://raw.github.com/CSSEGISandData' \
-                         '/COVID-19/master/csse_covid_19_data' \
-                         '/csse_covid_19_daily_reports/'
-        try:
-            if date.day >= 10:
-                if date.month >= 10:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'{str(date.month)}-'
-                                       f'{str(date.day)}-2020.csv')
-                else:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'0{str(date.month)}-'
-                                       f'{str(date.day)}-2020.csv')
-            else:
-                if date.month > 10:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'{str(date.month)}-'
-                                       f'0{str(date.day)}-2020.csv')
-                else:
-                    req = requests.get(f'{mainurl_corona}'
-                                       f'0{str(date.month)}-'
-                                       f'0{str(date.day)}-2020.csv')
-            return req
-        except BaseException:
-            return None
-
-    @staticmethod
-    def sort_corona_dict():
-        date = datetime.date.today() - datetime.timedelta(days=1)
-        client = pymongo.MongoClient()
-        bd = client.mongo_bd
-        name_date = str(date.day) + str(date.month) + str(date.year)
-        Calculations._data_check(bd, date)
-        corona_collection_today = bd[name_date]
-        sort_dictlist = []
-        for line in corona_collection_today.find():
-            sort_dictlist.append(line)
-        sort_dictlist = sorted(sort_dictlist, key=lambda record: int(
-            record['Confirmed']), reverse=True)
-        return sort_dictlist
-
-    @staticmethod
-    def _data_check(bd, date):
-        if str(date.day) + str(date.month) + str(date.year) in bd.list_collection_names():
-            return 1
-        else:
-            Calculations._corona_data_download(bd, date, Calculations.get_corona_data_by_date(date))
-
-    @staticmethod
-    def _get_collection_by_date(bd, date):
-        return bd[str(date.day) + str(date.month) + str(date.year)]
-
-    @staticmethod
-    def _corona_data_download(bd, date, corona_data):
-        for row in list(csv.DictReader(corona_data.content.decode(
-                'utf-8').splitlines(), delimiter=',')):
-            row['Confirmed'] = int(row['Confirmed'])
-            Calculations._get_collection_by_date(bd, date).insert_one(row)
-
-    @staticmethod
     def corona_stats_dynamics():
         client = pymongo.MongoClient()
         bd = client.mongo_bd
-        Calculations._data_check(bd, datetime.date.today() - datetime.timedelta(days=1))
-        Calculations._data_check(bd, datetime.date.today() - datetime.timedelta(days=2))
+        CBW = CoronaBdWork(pymongo.MongoClient())
+        CBW.data_check(bd, datetime.date.today() - datetime.timedelta(days=1))
+        CBW.data_check(bd, datetime.date.today() - datetime.timedelta(days=2))
         msg = "Со вчерашнего дня заразилось " + \
               str(Calculations.today_yesterday_diff(bd)) + " человек"
         return msg
