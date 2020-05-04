@@ -92,7 +92,7 @@ class Calculations:
 
     @staticmethod
     def fact_selection(bd):
-        if not 'cat_facts' in bd.list_collection_names():
+        if 'cat_facts' not in bd.list_collection_names():
             Calculations.cat_database_set_up(bd['cat_facts'])
         return bd['cat_facts'].find_one({'id': int(random() * 20)})['text']
 
@@ -103,10 +103,11 @@ class Calculations:
             return 'Error occurred'
         cat_facts.drop()
         json_facts = req.json()
-        most_upvoted = sorted(json_facts['all'], key=lambda fact: int(fact['upvotes']), reverse=True)
+        most_upvoted = sorted(json_facts['all'],
+                              key=lambda fact: int(fact['upvotes']),
+                              reverse=True)
         counter = 0
         for line in most_upvoted:
             line['id'] = counter
             counter += 1
         cat_facts.insert_many(most_upvoted)
-

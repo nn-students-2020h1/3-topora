@@ -1,6 +1,7 @@
 import datetime
-from telegram import Bot, Update
+from telegram import Update
 import pymongo
+
 
 class Logger:
     def __init__(self):
@@ -36,9 +37,7 @@ class Logger:
         """message is the answer for a user"""
         message = ''
         """File with the name of user"""
-        # может вынести поиск по логу в класс
         try:
-            bd = self.client.mongo_bd
             collection = self.client.mongo_bd.students
         except BaseException:
             return 'Error occurred'
@@ -51,4 +50,3 @@ class Logger:
                 else:
                     break
         return f'History:\n{message}'
-

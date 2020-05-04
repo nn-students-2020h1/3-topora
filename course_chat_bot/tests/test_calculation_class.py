@@ -15,9 +15,12 @@ class TestCalculationClass(unittest.TestCase):
     def test_get_msg_for_corona(self):
         CoronaBdWork.get_sorted_corona_list = mock.MagicMock(
             return_value=[{'FIPS': '', 'Admin2': '', 'Province_State': '',
-                           'Country_Region': 'Spain', 'Last_Update': '2020-05-04 02:32:28',
-                           'Lat': '40.463667', 'Long_': '-3.74922', 'Confirmed': 217466,
-                           'Deaths': 25264, 'Recovered': 118902, 'Active': 73300,
+                           'Country_Region': 'Spain',
+                           'Last_Update': '2020-05-04 02:32:28',
+                           'Lat': '40.463667', 'Long_': '-3.74922',
+                           'Confirmed': 217466,
+                           'Deaths': 25264, 'Recovered': 118902,
+                           'Active': 73300,
                            'Combined_Key': 'Spain'}]
             )
         self.assertEqual(type(Calculations.get_msg_for_corona()), str)
@@ -26,7 +29,8 @@ class TestCalculationClass(unittest.TestCase):
         self.assertIsInstance(Calculations.corona_stats_dynamics(), str)
 
     def test_corona_stats_dynamics_2(self):
-        self.assertTrue(int(Calculations.corona_stats_dynamics().split(' ')[4]) > 0)
+        self.assertTrue(int(Calculations.corona_stats_dynamics().
+                            split(' ')[4]) > 0)
 
     def test_get_position_weather_1(self):
         self.assertIsInstance(Calculations.get_position_weather(), dict)

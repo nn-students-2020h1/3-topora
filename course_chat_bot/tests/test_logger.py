@@ -24,7 +24,7 @@ class TestLoggerLogFunc(unittest.TestCase):
         pymongo.MongoClient = mongomock.MongoClient
         logger.client = mongomock.MongoClient()
         self.client = pymongo.MongoClient()
-        self.collection =logger.client.logger.client.mongo_bd.students
+        self.collection = logger.client.logger.client.mongo_bd.students
 
     def test_log_func(self):
         count_doc = self.collection.count_documents({})
@@ -34,7 +34,8 @@ class TestLoggerLogFunc(unittest.TestCase):
         self.assertEqual(count_doc + 1, self.collection.count_documents({}))
 
     def test_log_func_order(self):
-        self.collection.delete_many({'nickname': self.update.effective_user.username})
+        self.collection.delete_many({'nickname': self.
+                                    update.effective_user.username})
         simple_action(self.update)
         self.update.message.text = 'last'
         simple_action(self.update)
@@ -53,9 +54,8 @@ class TestLoggerLogFunc(unittest.TestCase):
 
     def test_log_func_date(self):
         simple_action(self.update)
-        for line in self.collection.find().sort(
-                '_id', pymongo.DESCENDING).limit(1):
-            last = line
+        line = list(self.collection.find().sort(
+                '_id', pymongo.DESCENDING).limit(1))[0]
         self.assertEqual(line['date'][:4],
                          str(datetime.datetime.now().year))
 
@@ -63,7 +63,8 @@ class TestLoggerLogFunc(unittest.TestCase):
         self.assertRaises(BaseException, simple_action(self.update))
 
     def test_history_1(self):
-        self.collection.delete_many({'nickname': self.update.effective_user.username})
+        self.collection.delete_many({'nickname': self.
+                                    update.effective_user.username})
         simple_action(self.update)
         simple_action(self.update)
         simple_action(self.update)
@@ -73,7 +74,8 @@ class TestLoggerLogFunc(unittest.TestCase):
                          .split('\n')[1], 'testing')
 
     def test_history_2(self):
-        self.collection.delete_many({'nickname': self.update.effective_user.username})
+        self.collection.delete_many({'nickname': self.
+                                    update.effective_user.username})
         simple_action(self.update)
         self.assertEqual(len(logger.last_5_history(self.update)
                              .split()), 2)
@@ -85,11 +87,13 @@ class TestLoggerLogFunc(unittest.TestCase):
         self.update_tyler.effective_user.username = 'Tyler Durden'
         self.update_tyler.effective_user.first_name = 'Tyler'
         self.update_tyler.effective_user.last_name = None
-        self.collection.delete_many({'nickname': self.update_tyler.effective_user.username})
+        self.collection.delete_many({'nickname': self.
+                                    update_tyler.effective_user.username})
         simple_action(self.update_tyler)
         simple_action(self.update_tyler)
         simple_action(self.update_tyler)
-        self.assertEqual(len(logger.last_5_history(self.update_tyler).split()), 4)
+        self.assertEqual(len(logger.last_5_history(self.
+                                                   update_tyler).split()), 4)
 
     def test_history_4(self):
         simple_action(self.update)
@@ -98,7 +102,8 @@ class TestLoggerLogFunc(unittest.TestCase):
         self.update_tyler.effective_user.username = 'Tyler Durden'
         self.update_tyler.effective_user.first_name = 'Tyler'
         self.update_tyler.effective_user.last_name = None
-        self.collection.delete_many({'nickname': self.update_tyler.effective_user.username})
+        self.collection.delete_many({'nickname': self.
+                                    update_tyler.effective_user.username})
         simple_action(self.update_tyler)
         simple_action(self.update_tyler)
         simple_action(self.update_tyler)
