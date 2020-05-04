@@ -1,6 +1,4 @@
-import datetime
 import requests
-import csv
 import pymongo
 from random import random
 from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
@@ -24,30 +22,10 @@ class Calculations:
 
     @staticmethod
     def corona_stats_dynamics():
-        client = pymongo.MongoClient()
-        bd = client.mongo_bd
         CBW = CoronaBdWork(pymongo.MongoClient())
-        CBW.data_check(bd, datetime.date.today() - datetime.timedelta(days=1))
-        CBW.data_check(bd, datetime.date.today() - datetime.timedelta(days=2))
         msg = "Со вчерашнего дня заразилось " + \
-              str(Calculations.today_yesterday_diff(bd)) + " человек"
+              str(CBW.today_yesterday_diff()) + " человек"
         return msg
-
-    @staticmethod
-    def date_to_col_name(date):
-        return str(date.day) + str(date.month) + str(date.year)
-
-    @staticmethod
-    def today_yesterday_diff(bd):
-        corona_collection_today = bd[Calculations.date_to_col_name(
-            datetime.date.today() - datetime.timedelta(days=1))]
-        corona_collection_yesterday = bd[Calculations.date_to_col_name(
-            datetime.date.today() - datetime.timedelta(days=2))]
-        sum_today = list(corona_collection_today.aggregate
-                         ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
-        sum_yesterday = list(corona_collection_yesterday.aggregate
-                             ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
-        return sum_today-sum_yesterday
 
     @staticmethod
     def get_weather():  # str
@@ -102,6 +80,8 @@ class Calculations:
 
     @staticmethod
     def get_cat_fact():
+        # TODO: запихать работу с базой и фактами тоже в sources
+        #  и там написать на них тесты
         try:
             msg = Calculations.fact_selection(pymongo.MongoClient().mongo_bd)
         except BaseException:

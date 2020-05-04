@@ -8,12 +8,14 @@ class CoronaBdWork:
     def __init__(self, client):
         self.client = client
 
-    def get_sorted_corona_list(self): #dict
-        self.data_check(self.client.mongo_bd,
-                        datetime.date.today() - datetime.timedelta(days=1))
-        return self._corona_datalist_sort(list(
-            self._get_collection_by_date(self.client.mongo_bd, datetime.date.today() -
-                                                 datetime.timedelta(days=1)).find()))
+    def get_sorted_corona_list(self):  # dict
+        if self.data_check(self.client.mongo_bd,
+                        datetime.date.today() - datetime.timedelta(days=1)) > 0:
+            return self._corona_datalist_sort(list(
+                self._get_collection_by_date(self.client.mongo_bd, datetime.date.today() -
+                                                     datetime.timedelta(days=1)).find()))
+        else:
+            return 'Error occured'
 
     def _get_collection_by_date(self, bd, date):
         return bd[str(date.day) + str(date.month) + str(date.year)]
@@ -26,14 +28,19 @@ class CoronaBdWork:
         if str(date.day) + str(date.month) + str(date.year) in bd.list_collection_names():
             return 1
         else:
-            self._corona_data_download(bd, date, self.get_corona_data_by_date(date))
+            try:
+                self._corona_data_download(bd, date, self._get_corona_data_by_date(date))
+                return 2
+            except BaseException:
+                return 0
 
-    def _corona_data_download(self, bd, date, corona_data):
-        self._corona_data_list_columns_modding(
-            list(self._get_corona_data_list_from_req(corona_data)),
-            ('Confirmed', 'Deaths', 'Recovered', 'Active'))
-        map(self._get_collection_by_date(bd, date).insert_one,
-            list(self._get_corona_data_list_from_req(corona_data)))
+    def _corona_data_download(self, bd, date, corona_list):
+        self._get_collection_by_date(bd, date).insert_many(
+            self._corona_data_list_columns_modding(
+            corona_list,
+            ('Confirmed', 'Deaths', 'Recovered', 'Active')
+            )
+        )
 
     def _corona_data_list_columns_modding(self, corona_data_list: list, columns_tuple: tuple):
         return list(map(lambda row: self._corona_data_column_modding(
@@ -44,12 +51,27 @@ class CoronaBdWork:
             row[column] = int(row[column])
         return row
 
-    def _get_corona_data_list_from_req(self, corona_data):
-        return list(csv.DictReader(corona_data.content.decode(
-                'utf-8').splitlines(), delimiter=','))
+    def _date_to_col_name(self, date):
+        return str(date.day) + str(date.month) + str(date.year)
+
+    def today_yesterday_diff(self):
+        bd = self.client.mongo_bd
+        if not self.data_check(bd, datetime.date.today() - datetime.timedelta(days=1)) > 0:
+            return -1
+        if not self.data_check(bd, datetime.date.today() - datetime.timedelta(days=2)) > 0:
+            return -1
+        corona_collection_today = bd[self._date_to_col_name(
+            datetime.date.today() - datetime.timedelta(days=1))]
+        corona_collection_yesterday = bd[self._date_to_col_name(
+            datetime.date.today() - datetime.timedelta(days=2))]
+        sum_today = list(corona_collection_today.aggregate
+                         ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
+        sum_yesterday = list(corona_collection_yesterday.aggregate
+                             ([{'$group': {'_id': 1, 'all': {'$sum': '$Confirmed'}}}]))[0]['all']
+        return sum_today-sum_yesterday
 
     @staticmethod
-    def get_corona_data_by_date(date):  # Responce
+    def _get_corona_data_by_date(date):  # list
         mainurl_corona = 'https://raw.github.com/CSSEGISandData' \
                          '/COVID-19/master/csse_covid_19_data' \
                          '/csse_covid_19_daily_reports/'
@@ -72,6 +94,10 @@ class CoronaBdWork:
                     req = requests.get(f'{mainurl_corona}'
                                        f'0{str(date.month)}-'
                                        f'0{str(date.day)}-2020.csv')
-            return req
+            if req.status_code == 200:
+                return list(csv.DictReader(req.content.decode(
+                    'utf-8').splitlines(), delimiter=','))
+            else:
+                raise BaseException
         except BaseException:
             return None

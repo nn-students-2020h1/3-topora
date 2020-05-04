@@ -47,8 +47,6 @@ class TestCalculationClass(unittest.TestCase):
         self.assertIsInstance(Calculations.sort_corona_dict(req)[0], dict)
 
     def test_corona_stats_dynamics_1(self):
-        #перед этим тестом придется загрузить в бд корона дату за вчера и за сегодня
-        #date.today.return_value = date(2020, 3, 10)
         self.assertIsInstance(Calculations.corona_stats_dynamics(), str)
 
     def test_get_position_weather_1(self):
