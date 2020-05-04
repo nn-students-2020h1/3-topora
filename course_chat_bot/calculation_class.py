@@ -15,6 +15,8 @@ class Calculations:
             return 'Error occurred'
         msg = 'Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
         for i in range(0, 5):
+            if i >= len(sort_dictlist):
+                break
             if len((sort_dictlist[i]['Province_State'])) > 0:
                 msg += sort_dictlist[i]['Province_State'] + ':'
             msg += sort_dictlist[i]['Country_Region'] + '\n'
@@ -22,13 +24,13 @@ class Calculations:
 
     @staticmethod
     def corona_stats_dynamics():
-        CBW = CoronaBdWork(pymongo.MongoClient())
-        msg = "Со вчерашнего дня заразилось " + \
-              str(CBW.today_yesterday_diff()) + " человек"
-        return msg
+        return "Со вчерашнего дня заразилось " + \
+              str(CoronaBdWork(pymongo.MongoClient()).
+                  today_yesterday_diff()) + " человек"
 
     @staticmethod
     def get_weather():  # str
+        # TODO: запихать вычисления погоды в sources
         message = ''
         try:
             resp = Calculations.get_position_weather()

@@ -11,6 +11,9 @@ class CoronaBdWork:
     def get_sorted_corona_list(self):  # dict
         if self.data_check(self.client.mongo_bd,
                         datetime.date.today() - datetime.timedelta(days=1)) > 0:
+            print(self._corona_datalist_sort(list(
+                self._get_collection_by_date(self.client.mongo_bd, datetime.date.today() -
+                                                     datetime.timedelta(days=1)).find()))[0])
             return self._corona_datalist_sort(list(
                 self._get_collection_by_date(self.client.mongo_bd, datetime.date.today() -
                                                      datetime.timedelta(days=1)).find()))
