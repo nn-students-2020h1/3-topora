@@ -28,7 +28,8 @@ log = func_logger()
 
 @log.log_func
 def corona_stats_dynamics(update: Update, context: CallbackContext):
-    update.message.reply_text(Calculations.corona_stats_dynamics())
+    update.message.reply_text(
+        Calculations.corona_stats_dynamics(update.message.text))
 
 
 @log.log_func
@@ -49,7 +50,8 @@ def gamesetup():
 
 @log.log_func
 def corono_stats(update: Update, context: CallbackContext):
-    update.message.reply_text(Calculations.get_msg_for_corona())
+    update.message.reply_text(
+        Calculations.get_msg_for_corona(update.message.text))
 
 
 @log.log_func
@@ -123,7 +125,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('history', chat_history))
     updater.dispatcher.add_handler(CommandHandler('fact', fact))
     updater.dispatcher.add_handler(CommandHandler
-                                   ('corono_stats', corono_stats))
+                                   ('corona_stats', corono_stats))
     updater.dispatcher.add_handler(CommandHandler('weather', weather))
     updater.dispatcher.add_handler(CommandHandler
                                    ('corona_dynamics', corona_stats_dynamics))

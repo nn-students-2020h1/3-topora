@@ -1,5 +1,6 @@
 import requests
 import pymongo
+import datetime
 from random import random
 from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
 
@@ -7,13 +8,14 @@ from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
 class Calculations:
 
     @staticmethod
-    def get_msg_for_corona():    # str
+    def get_msg_for_corona(message: str):    # str
         try:
             sort_dictlist = CoronaBdWork(pymongo.MongoClient())\
-                .get_sorted_corona_list()
+                .get_sorted_corona_list(CoronaBdWork.message_parse(message))
         except BaseException:
             return 'Error occurred'
-        msg = 'Топ 5 местностей по зарегистрированным заражениям на сегодня:\n'
+        msg = f'Топ 5 местностей по зарегистрированным заражениям на ' \
+            f'{str(CoronaBdWork.message_parse(message))}:\n'
         for i in range(0, 5):
             if i >= len(sort_dictlist):
                 break
@@ -23,10 +25,12 @@ class Calculations:
         return msg
 
     @staticmethod
-    def corona_stats_dynamics():
-        return "Со вчерашнего дня заразилось " + \
-              str(CoronaBdWork(pymongo.MongoClient()).
-                  today_yesterday_diff()) + " человек"
+    def corona_stats_dynamics(message: str):
+        return f"За {str(CoronaBdWork.message_parse(message) - datetime.timedelta(days=1))}" \
+                   f" заразилось " + \
+                   str(CoronaBdWork(pymongo.MongoClient()).
+                       today_yesterday_diff(
+                       CoronaBdWork.message_parse(message))) + " человек"
 
     @staticmethod
     def get_weather():  # str

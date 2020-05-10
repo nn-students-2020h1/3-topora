@@ -1,6 +1,7 @@
 import requests
 import csv
 import datetime
+import re
 
 
 class CoronaBdWork:
@@ -8,15 +9,39 @@ class CoronaBdWork:
     def __init__(self, client):
         self.client = client
 
-    def get_sorted_corona_list(self):  # dict
-        if self.data_check(self.client.mongo_bd,
-                           datetime.date.today() -
-                           datetime.timedelta(days=1)) > 0:
+    @staticmethod
+    def message_parse(message: str):  # datetime
+        if not re.search(r'\s', message):
+            return datetime.date.today() - \
+                               datetime.timedelta(days=1)
+        match = re.search(
+            r'(\d{2})(\:|\.)(\d{2})(\:|\.)((\d{4})|(\d{2}))', message)
+        if match:
+            if CoronaBdWork._is_date_valid(match.group(0)):
+                return CoronaBdWork._match_to_date(match.group(0))
+        return None
+
+    @staticmethod
+    def _match_to_date(match: str):
+        splitted = re.split(match[2], match)
+        if int(splitted[2]) < 100:
+            splitted[2] = str(int(splitted[2]) + 2000)
+        return datetime.date(
+            int(splitted[2]), int(splitted[1]), int(splitted[0]))
+
+    @staticmethod
+    def _is_date_valid(date: str):  # bool
+        splitted = re.split(date[:][2], date)
+        if int(str(splitted[0])) < 31 and int(str(splitted[1])) < 13:
+            return True
+        else:
+            return False
+
+    def get_sorted_corona_list(self, date: datetime.date):  # dict
+        if self.data_check(self.client.mongo_bd, date) > 0:
             return self._corona_datalist_sort(list(
-                self._get_collection_by_date(self.client.mongo_bd,
-                                             datetime.date.today() -
-                                             datetime.timedelta(days=1)
-                                             ).find()))
+                self._get_collection_by_date(
+                    self.client.mongo_bd, date).find()))
         else:
             return 'Error occured'
 
@@ -61,18 +86,17 @@ class CoronaBdWork:
     def _date_to_col_name(self, date):
         return str(date.day) + str(date.month) + str(date.year)
 
-    def today_yesterday_diff(self):
+    def today_yesterday_diff(self, date: datetime.date):  # int
         bd = self.client.mongo_bd
-        if not self.data_check(bd, datetime.date.today() -
+        if not self.data_check(bd, date) > 0:
+            return -1
+        if not self.data_check(bd, date -
                                datetime.timedelta(days=1)) > 0:
             return -1
-        if not self.data_check(bd, datetime.date.today() -
-                               datetime.timedelta(days=2)) > 0:
-            return -1
         corona_collection_today = bd[self._date_to_col_name(
-            datetime.date.today() - datetime.timedelta(days=1))]
+            date)]
         corona_collection_yesterday = bd[self._date_to_col_name(
-            datetime.date.today() - datetime.timedelta(days=2))]
+            date - datetime.timedelta(days=1))]
         sum_today = list(corona_collection_today.aggregate
                          ([{'$group': {'_id': 1, 'all':
                           {'$sum': '$Confirmed'}}}]))[0]['all']

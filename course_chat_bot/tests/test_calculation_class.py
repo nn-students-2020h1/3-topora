@@ -23,14 +23,17 @@ class TestCalculationClass(unittest.TestCase):
                            'Active': 73300,
                            'Combined_Key': 'Spain'}]
             )
-        self.assertEqual(type(Calculations.get_msg_for_corona()), str)
+        self.assertEqual(type(Calculations.get_msg_for_corona(
+            'message for testing 03:05:2020')), str)
 
     def test_corona_stats_dynamics_1(self):
-        self.assertIsInstance(Calculations.corona_stats_dynamics(), str)
+        self.assertIsInstance(Calculations.corona_stats_dynamics(
+            'message for testing 03:05:2020'), str)
 
     def test_corona_stats_dynamics_2(self):
-        self.assertTrue(int(Calculations.corona_stats_dynamics().
-                            split(' ')[4]) > 0)
+        self.assertTrue(int(Calculations.corona_stats_dynamics(
+            'message for testing 03:05:2020').
+                            split(' ')[3]) > 0)
 
     def test_get_position_weather_1(self):
         self.assertIsInstance(Calculations.get_position_weather(), dict)
