@@ -6,7 +6,7 @@ import pymongo
 class Logger:
     def __init__(self):
         self.log = []
-        self.client = pymongo.MongoClient
+        self.client = pymongo.MongoClient()
 
     def log_func(self, func):
         def inner(*args, **kwargs):
