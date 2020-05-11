@@ -8,6 +8,19 @@ from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
 class Calculations:
 
     @staticmethod
+    def print_poem(message: str):  # str
+        client = pymongo.MongoClient()
+        bd = client.mongo_bd
+        collection = bd.poems
+        result = ''
+        for line in collection.find():
+            if line["text"].find(message) > -1:
+                result = line["text"]
+        if result == '':
+            result = 'Not found :('
+        return result
+
+    @staticmethod
     def get_msg_for_corona(message: str):    # str
         try:
             sort_dictlist = CoronaBdWork(pymongo.MongoClient())\
