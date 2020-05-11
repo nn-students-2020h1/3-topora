@@ -94,7 +94,8 @@ def echo(update: Update, context: CallbackContext):
         except BaseException:
             update.message.reply_text('First start a game')
     else:
-        update.message.reply_text(update.message.text)
+        update.message.reply_text(
+            Calculations.print_poem(update.message.text))
 
 
 @log.log_func
