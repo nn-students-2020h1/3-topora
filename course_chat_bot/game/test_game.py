@@ -91,7 +91,7 @@ class TestBoard(unittest.TestCase):
         random.randrange = mock.MagicMock(return_value=0)
         puzzle = BossPuzzle()
         puzzle.start_new_game()
-        self.assertEqual(puzzle.board.numbs[1].x, Board.Start_poses[0][1][0])
+        self.assertEqual(puzzle.board.numbs[0].x, Board.Start_poses[0][1][1])
 
 
 if __name__ == '__main__':

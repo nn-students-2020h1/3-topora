@@ -32,7 +32,7 @@ class CoronaBdWork:
     @staticmethod
     def _is_date_valid(date: str):  # bool
         splitted = re.split(date[:][2], date)
-        if int(str(splitted[0])) < 31 and int(str(splitted[1])) < 13:
+        if int(str(splitted[0])) < 32 and int(str(splitted[1])) < 13:
             return True
         else:
             return False

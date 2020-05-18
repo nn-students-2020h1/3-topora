@@ -34,11 +34,13 @@ def corona_stats_dynamics(update: Update, context: CallbackContext):
 
 @log.log_func
 def game(update: Update, context: CallbackContext):
+    # TODO: переделать получение команд для игры
     puzzle.start_new_game()
     update.message.reply_text(puzzle.get_board()+'\n'
                               + 'Game has started' + '\n'
+
                               + 'Type:"game: *coordinates*'
-                                ' *coordinates*" to play')
+                                ' *coordinates of free cell*" to play')
 
 
 def gamesetup():
@@ -66,16 +68,22 @@ def start(update: Update, context: CallbackContext):
 
 
 @log.log_func
+def horoscope(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        Calculations.get_horoscope(update.message.text))
+
+@log.log_func
 def chat_help(update: Update, context: CallbackContext):
     """Send a message when the command /help is issued."""
     msg = 'Here is what you can do\n' \
           '/start to start\n' \
           '/weather to view weather\n' \
           '/game to play the 15-Puzzle\n' \
+          '/horo *your zodiac sign* to view horoscope' \
           '/fact to get cat fact\n' \
-          '/corona_stats to view latest corona-virus' \
+          '/corona_stats *date* to view latest corona-virus' \
           ' statistic(for all the time)\n' \
-          '/corona_dynamics to view latest corona-virus dynamics\n'
+          '/corona_dynamics *date* to view latest corona-virus dynamics\n'
     update.message.reply_text(msg)
 
 
@@ -131,6 +139,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler
                                    ('corona_dynamics', corona_stats_dynamics))
     updater.dispatcher.add_handler(CommandHandler('game', game))
+    updater.dispatcher.add_handler(CommandHandler('horo', horoscope))
     gamesetup()
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
