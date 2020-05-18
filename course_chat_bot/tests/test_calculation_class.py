@@ -60,6 +60,8 @@ class TestCalculationClass(unittest.TestCase):
     def test_get_cat_fact_2(self, mocked_get):
         self.assertIsInstance(Calculations.get_cat_fact(), str)
 
+    def test_horoscope(self):
+        self.assertIn('.', Calculations.get_horoscope('/horo овен'))
 
 if __name__ == '__main__':
     unittest.main()

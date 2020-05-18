@@ -1,4 +1,5 @@
 from course_chat_bot.game.Board import Board
+from course_chat_bot.game.Renderer import Renderer
 import random
 
 
@@ -10,7 +11,7 @@ class BossPuzzle:
         self.board = Board(BossPuzzle.Board_size)
 
     def get_board(self):
-        return self.Renderer.render(self.board)
+        return Renderer.render(self.board)
 
     def start_new_game(self):
         pos_number = random.randrange(1, len(self.board.Start_poses)-1)

@@ -8,7 +8,7 @@ class Renderer:
         coord_list = []  # x: int , y: int
         render_queue = []
         for i in range(board.size*board.size):
-            coord_list.append([i // board.size + 1, i % board.size+1])
+            coord_list.append([i % board.size + 1, i // board.size+1])
         for cell in coord_list:
             if cell[0] == board.freecell[0] and cell[1] == board.freecell[1]:
                 render_queue.append(0)
@@ -31,7 +31,6 @@ class Renderer:
         board_draw = chr(9679)+' '
         for i in range(0, board.size):
             board_draw += chr(ord('a')+i)+'  '
-
         counter = 0
         for i in range(1, len(render_queue)+1):
             if (i-1) % board.size == 0:

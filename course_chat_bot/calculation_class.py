@@ -3,6 +3,8 @@ import pymongo
 import datetime
 from random import random
 from course_chat_bot.sources.Calc_src.Corona_src import CoronaBdWork
+from course_chat_bot.sources.Calc_src.Horoscope \
+    import horo_message_parse, get_horoscope_str
 
 
 class Calculations:
@@ -128,3 +130,7 @@ class Calculations:
             line['id'] = counter
             counter += 1
         cat_facts.insert_many(most_upvoted)
+
+    @staticmethod
+    def get_horoscope(message: str):
+        return get_horoscope_str(horo_message_parse(message))
