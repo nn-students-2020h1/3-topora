@@ -77,11 +77,6 @@ class TestBoard(unittest.TestCase):
         puzzle.board.start_pose(0)
         self.assertEqual(puzzle.action('d3 d4'), True)
 
-    def test_game_action_1(self):
-        puzzle = BossPuzzle()
-        puzzle.board.start_pose(1)
-        self.assertEqual(puzzle.action('d2 d1'), True)
-
     def test_render_render_list(self):
         pos_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
                     12, 13, 14, 15, 0]
@@ -96,7 +91,7 @@ class TestBoard(unittest.TestCase):
         random.randrange = mock.MagicMock(return_value=0)
         puzzle = BossPuzzle()
         puzzle.start_new_game()
-        self.assertEqual(puzzle.board.numbs[1].x, Board.Start_poses[0][1][0])
+        self.assertEqual(puzzle.board.numbs[0].x, Board.Start_poses[0][1][1])
 
 
 if __name__ == '__main__':
